@@ -116,10 +116,6 @@ export default function Board() {
   const myCharacter = characters.find((c) => c.id === myCharId);
   const opponentCharacter = characters.find((c) => c.id === opponentCharId);
 
-  // Opponent's eliminated (what we see flipped on their board)
-  const opponentEliminated =
-    myRole === 'host' ? session.guest_eliminated : session.host_eliminated;
-
   const isMine = isMyTurn();
 
   return (
@@ -162,19 +158,6 @@ export default function Board() {
             onPress={isMine ? handleEliminate : undefined}
           />
         </View>
-
-        {/* Opponent's eliminated (read-only reference) */}
-        {opponentEliminated.length > 0 && (
-          <View className="px-1 mt-4">
-            <Text className="text-slate-500 text-xs font-medium uppercase tracking-wider px-3 mb-2">
-              Opponent eliminated ({opponentEliminated.length})
-            </Text>
-            <CharacterGrid
-              characters={characters}
-              eliminated={opponentEliminated}
-            />
-          </View>
-        )}
 
         {/* Actions */}
         {isMine && (
