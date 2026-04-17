@@ -33,12 +33,19 @@ export default function CharacterSelect() {
   useEffect(() => {
     if (!sessionId) return;
 
+    let didNavigate = false;
+    const goToBoard = () => {
+      if (didNavigate) return;
+      didNavigate = true;
+      router.replace(`/(game)/board?sessionId=${sessionId}`);
+    };
+
     const init = async () => {
       const s = await getSessionById(sessionId);
       if (!s) return;
       setSession(s);
+      if (s.status === 'active') { goToBoard(); return; }
       const chars = await getCharactersByIds(s.character_pool);
-      // Sort by pool order
       const poolOrder = s.character_pool;
       chars.sort((a, b) => poolOrder.indexOf(a.id) - poolOrder.indexOf(b.id));
       setLocalChars(chars);
@@ -58,13 +65,27 @@ export default function CharacterSelect() {
           setSession(updated);
           if (updated.status === 'active') {
             supabase.removeChannel(channel);
-            router.replace(`/(game)/board?sessionId=${sessionId}`);
+            goToBoard();
           }
         },
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Polling fallback — same realtime issue as lobby for registered users
+    const poll = setInterval(async () => {
+      const s = await getSessionById(sessionId);
+      if (s) setSession(s);
+      if (s?.status === 'active') {
+        clearInterval(poll);
+        supabase.removeChannel(channel);
+        goToBoard();
+      }
+    }, 3000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(poll);
+    };
   }, [sessionId]);
 
   const handleConfirm = async () => {

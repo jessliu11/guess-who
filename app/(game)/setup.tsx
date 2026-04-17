@@ -16,6 +16,7 @@ import { JoinCodeInput } from '../../src/components/ui/JoinCodeInput';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { getSystemPacks, getCharactersByIds } from '../../src/lib/packs';
+import { getMyCustomCharacters } from '../../src/lib/characters';
 import { createSession, joinSession } from '../../src/lib/session';
 import { useGameStore } from '../../src/store/gameStore';
 import type { CharacterPack, Character } from '../../src/types/game.types';
@@ -170,6 +171,8 @@ export default function Setup() {
   const isHost = mode !== 'join';
 
   const [packs, setPacks] = useState<CharacterPack[]>([]);
+  const [customCharacters, setCustomCharacters] = useState<Character[]>([]);
+  const [customExpanded, setCustomExpanded] = useState(false);
   const [expandedPackIds, setExpandedPackIds] = useState<Set<string>>(new Set());
   const [packCharacters, setPackCharacters] = useState<Record<string, Character[]>>({});
   const [loadingCharacters, setLoadingCharacters] = useState<Record<string, boolean>>({});
@@ -181,11 +184,15 @@ export default function Setup() {
   useEffect(() => {
     clearGame();
     if (isHost) {
-      getSystemPacks()
-        .then(setPacks)
-        .finally(() => setLoadingPacks(false));
+      Promise.all([
+        getSystemPacks(),
+        user ? getMyCustomCharacters(user.id) : Promise.resolve([]),
+      ]).then(([sp, cc]) => {
+        setPacks(sp);
+        setCustomCharacters(cc);
+      }).finally(() => setLoadingPacks(false));
     }
-  }, [isHost]);
+  }, [isHost, user]);
 
   const togglePackExpansion = async (pack: CharacterPack) => {
     const isExpanded = expandedPackIds.has(pack.id);
@@ -232,6 +239,22 @@ export default function Setup() {
     setSelectedIds((prev) => {
       const s = new Set(prev);
       chars.forEach((c) => s.delete(c.id));
+      return s;
+    });
+  };
+
+  const selectAllCustom = () => {
+    setSelectedIds((prev) => {
+      const s = new Set(prev);
+      customCharacters.forEach((c) => s.add(c.id));
+      return s;
+    });
+  };
+
+  const deselectAllCustom = () => {
+    setSelectedIds((prev) => {
+      const s = new Set(prev);
+      customCharacters.forEach((c) => s.delete(c.id));
       return s;
     });
   };
@@ -291,6 +314,58 @@ export default function Setup() {
           <Text className="text-slate-400 text-sm mb-4">
             Expand a pack to pick characters. Mix and match from any pack.
           </Text>
+
+          {/* My Characters */}
+          {customCharacters.length > 0 && (
+            <View className="mb-3 rounded-2xl border border-primary-800 bg-primary-950 overflow-hidden">
+              <TouchableOpacity
+                onPress={() => setCustomExpanded((v) => !v)}
+                activeOpacity={0.7}
+                className="px-4 py-3 flex-row items-center justify-between"
+              >
+                <View className="flex-1">
+                  <Text className="text-primary-300 font-semibold text-base">My Characters</Text>
+                  <Text className="text-primary-500 text-xs mt-0.5">
+                    {customCharacters.length} character{customCharacters.length !== 1 ? 's' : ''}
+                    {customExpanded && (() => {
+                      const n = customCharacters.filter((c) => selectedIds.has(c.id)).length;
+                      return n > 0 ? ` · ${n} selected` : '';
+                    })()}
+                  </Text>
+                </View>
+                <Text className="text-primary-400 text-lg">{customExpanded ? '▾' : '▸'}</Text>
+              </TouchableOpacity>
+
+              {customExpanded && (
+                <View className="border-t border-primary-800 px-2 pb-3 pt-2">
+                  <View className="flex-row gap-2 px-2 pb-2">
+                    <TouchableOpacity
+                      onPress={selectAllCustom}
+                      className="flex-1 py-1.5 rounded-lg items-center border border-primary-600"
+                    >
+                      <Text className="text-primary-400 text-xs font-medium">Select All</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={deselectAllCustom}
+                      className="flex-1 py-1.5 rounded-lg items-center border border-slate-600"
+                    >
+                      <Text className="text-slate-400 text-xs font-medium">Deselect All</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View className="flex-row flex-wrap">
+                    {customCharacters.map((character) => (
+                      <CharacterCard
+                        key={character.id}
+                        character={character}
+                        selected={selectedIds.has(character.id)}
+                        onToggle={() => toggleCharacter(character.id)}
+                      />
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
 
           <Text className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-3">
             Standard — Free

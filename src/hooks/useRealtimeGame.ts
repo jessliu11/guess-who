@@ -54,8 +54,13 @@ export function useRealtimeGame(sessionId: string | null) {
 
     const sub = AppState.addEventListener('change', handleAppState);
 
+    // Polling fallback — realtime postgres_changes can silently miss events
+    // for registered (email/password) sessions.
+    const poll = setInterval(() => refetch(sessionId), 3000);
+
     return () => {
       sub.remove();
+      clearInterval(poll);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;

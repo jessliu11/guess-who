@@ -35,9 +35,24 @@ export default function Lobby() {
   useEffect(() => {
     if (!sessionId) return;
 
-    // Initial load
+    let didNavigate = false;
+    const advance = (s: GameSession) => {
+      if (didNavigate) return;
+      didNavigate = true;
+      setLocalSession(s);
+      setSession(s);
+      router.replace(`/(game)/character-select?sessionId=${sessionId}`);
+    };
+
+    // Initial load — navigate immediately if we've already passed 'waiting'
     getSessionById(sessionId).then((s) => {
-      if (s) { setLocalSession(s); setSession(s); }
+      if (!s) { setLoading(false); return; }
+      setLocalSession(s);
+      setSession(s);
+      if (s.status === 'selecting' || s.status === 'active') {
+        advance(s);
+        return;
+      }
       setLoading(false);
     });
 
@@ -49,18 +64,33 @@ export default function Lobby() {
         { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${sessionId}` },
         (payload) => {
           const updated = payload.new as GameSession;
-          setLocalSession(updated);
-          setSession(updated);
-
-          if (updated.status === 'selecting') {
+          if (updated.status === 'selecting' || updated.status === 'active') {
             supabase.removeChannel(channel);
-            router.replace(`/(game)/character-select?sessionId=${sessionId}`);
+            advance(updated);
+          } else {
+            setLocalSession(updated);
+            setSession(updated);
           }
         },
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Polling fallback every 3 s — realtime can silently miss events for
+    // registered (email/password) sessions due to JWT handling in the
+    // Supabase realtime RLS evaluation path.
+    const poll = setInterval(async () => {
+      const s = await getSessionById(sessionId);
+      if (s && (s.status === 'selecting' || s.status === 'active')) {
+        clearInterval(poll);
+        supabase.removeChannel(channel);
+        advance(s);
+      }
+    }, 3000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(poll);
+    };
   }, [sessionId]);
 
   const handleCancel = async () => {

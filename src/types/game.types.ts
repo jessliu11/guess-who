@@ -27,6 +27,7 @@ export interface CharacterAttributes {
 export interface Character {
   id: string;
   category_id: string;
+  creator_id?: string;
   name: string;
   image_url: string;
   tier: 'standard' | 'extended';

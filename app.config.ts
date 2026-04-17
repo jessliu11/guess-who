@@ -19,7 +19,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: false,
     bundleIdentifier: 'com.guesswho.app',
     infoPlist: {
-      NSCameraUsageDescription: 'Used to take profile photos.',
+      NSCameraUsageDescription: 'Used to take character and profile photos.',
+      NSPhotoLibraryUsageDescription: 'Used to pick photos for custom characters.',
     },
   },
   android: {
@@ -30,6 +31,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
+    permissions: ['android.permission.CAMERA', 'android.permission.READ_MEDIA_IMAGES'],
   },
   web: {
     bundler: 'metro',

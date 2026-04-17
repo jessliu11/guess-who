@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,11 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { useAuth } from '../../src/hooks/useAuth';
 import { getSystemPacks, getMyPacks, deletePack, getCharactersByIds } from '../../src/lib/packs';
+import { getMyCustomCharacters, deleteCustomCharacter } from '../../src/lib/characters';
 import type { CharacterPack, Character } from '../../src/types/game.types';
 
 function PackSection({
@@ -112,6 +113,7 @@ export default function Packs() {
   const { user } = useAuth();
   const [systemPacks, setSystemPacks] = useState<CharacterPack[]>([]);
   const [myPacks, setMyPacks] = useState<CharacterPack[]>([]);
+  const [customCharacters, setCustomCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedPackIds, setExpandedPackIds] = useState<Set<string>>(new Set());
   const [packCharacters, setPackCharacters] = useState<Record<string, Character[]>>({});
@@ -119,18 +121,30 @@ export default function Packs() {
 
   const load = async () => {
     try {
-      const [sp, mp] = await Promise.all([
+      const [sp, mp, cc] = await Promise.all([
         getSystemPacks(),
         user ? getMyPacks(user.id) : Promise.resolve([]),
+        user ? getMyCustomCharacters(user.id) : Promise.resolve([]),
       ]);
       setSystemPacks(sp);
       setMyPacks(mp);
+      setCustomCharacters(cc);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => { load(); }, [user]);
+
+  // Refresh custom characters whenever the tab comes back into focus
+  // (e.g. after returning from the character creator)
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        getMyCustomCharacters(user.id).then(setCustomCharacters).catch(() => {});
+      }
+    }, [user]),
+  );
 
   const togglePackExpansion = async (pack: CharacterPack) => {
     const isExpanded = expandedPackIds.has(pack.id);
@@ -152,6 +166,21 @@ export default function Packs() {
         }
       }
     }
+  };
+
+  const handleDeleteCustomCharacter = (character: Character) => {
+    Alert.alert('Delete Character', `Delete "${character.name}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          if (!user) return;
+          await deleteCustomCharacter(character.id, user.id);
+          setCustomCharacters((prev) => prev.filter((c) => c.id !== character.id));
+        },
+      },
+    ]);
   };
 
   const handleDelete = (pack: CharacterPack) => {
@@ -214,6 +243,60 @@ export default function Packs() {
             <Text className="text-primary-400 font-bold">›</Text>
           </TouchableOpacity>
         )}
+
+        {/* My Characters */}
+        <View className="mb-5">
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-slate-300 font-semibold text-sm">My Characters</Text>
+            <TouchableOpacity
+              onPress={() => router.push('/(game)/character-creator' as any)}
+              className="bg-primary-600 px-3 py-1.5 rounded-lg"
+            >
+              <Text className="text-white text-xs font-semibold">+ Create</Text>
+            </TouchableOpacity>
+          </View>
+
+          {customCharacters.length === 0 ? (
+            <TouchableOpacity
+              onPress={() => router.push('/(game)/character-creator' as any)}
+              className="bg-surface-card border border-dashed border-slate-600 rounded-2xl p-5 items-center gap-2"
+            >
+              <Text className="text-2xl">🎨</Text>
+              <Text className="text-white font-semibold text-sm">Create your first character</Text>
+              <Text className="text-slate-500 text-xs text-center">
+                Add anyone — friends, family, or anyone you like
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View className="bg-surface-card border border-slate-700 rounded-2xl p-3">
+              <View className="flex-row flex-wrap">
+                {customCharacters.map((character) => (
+                  <View key={character.id} style={{ width: '23%', margin: '1%' }}>
+                    <TouchableOpacity
+                      onLongPress={() => handleDeleteCustomCharacter(character)}
+                      activeOpacity={0.8}
+                      className="rounded-xl overflow-hidden border border-slate-700"
+                    >
+                      <Image
+                        source={{ uri: character.image_url }}
+                        style={{ width: '100%', aspectRatio: 1 }}
+                        resizeMode="cover"
+                      />
+                      <View className="bg-surface px-1 py-1">
+                        <Text className="text-white text-[10px] text-center" numberOfLines={1}>
+                          {character.name}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+              <Text className="text-slate-600 text-[10px] text-center mt-2">
+                Long-press a character to delete
+              </Text>
+            </View>
+          )}
+        </View>
 
         {/* My Packs */}
         {myPacks.length > 0 && (

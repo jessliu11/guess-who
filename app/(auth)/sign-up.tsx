@@ -23,7 +23,7 @@ export default function SignUp() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: displayName } },
@@ -31,8 +31,13 @@ export default function SignUp() {
     setLoading(false);
     if (error) {
       Alert.alert('Sign Up Failed', error.message);
+    } else if (!data.session) {
+      Alert.alert(
+        'Check Your Email',
+        'A confirmation link has been sent to your email address. Please confirm your account to continue.'
+      );
     }
-    // AuthGate handles redirect on success
+    // If session exists, AuthGate handles redirect
   };
 
   return (
