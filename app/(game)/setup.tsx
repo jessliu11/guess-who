@@ -177,9 +177,17 @@ export default function Setup() {
   const [packCharacters, setPackCharacters] = useState<Record<string, Character[]>>({});
   const [loadingCharacters, setLoadingCharacters] = useState<Record<string, boolean>>({});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [boardSize, setBoardSize] = useState(24);
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingPacks, setLoadingPacks] = useState(isHost);
+
+  useEffect(() => {
+    const count = selectedIds.size;
+    if (count > 0) {
+      setBoardSize((prev) => Math.min(prev, count));
+    }
+  }, [selectedIds]);
 
   useEffect(() => {
     clearGame();
@@ -263,7 +271,7 @@ export default function Setup() {
     if (!user || selectedIds.size < MIN_CHARACTERS) return;
     setLoading(true);
     try {
-      const session = await createSession(user.id, null, Array.from(selectedIds));
+      const session = await createSession(user.id, null, Array.from(selectedIds), boardSize);
       useGameStore.getState().setMyRole('host');
       router.push(`/(game)/lobby?sessionId=${session.id}`);
     } catch (e: any) {
@@ -419,6 +427,39 @@ export default function Setup() {
               {selectedCount} character{selectedCount !== 1 ? 's' : ''} selected
               {!canStart && ` — select at least ${MIN_CHARACTERS} to start`}
             </Text>
+
+            {canStart && (
+              <View className="mb-4 bg-surface-card rounded-2xl px-4 py-3 border border-slate-700">
+                <Text className="text-slate-400 text-xs text-center mb-3">Board size</Text>
+                <View className="flex-row items-center justify-center gap-6">
+                  <TouchableOpacity
+                    onPress={() => setBoardSize((p) => Math.max(MIN_CHARACTERS, p - 1))}
+                    disabled={boardSize <= MIN_CHARACTERS}
+                    className={`w-10 h-10 rounded-full items-center justify-center border ${
+                      boardSize <= MIN_CHARACTERS ? 'border-slate-700 opacity-40' : 'border-slate-500'
+                    }`}
+                  >
+                    <Text className="text-white text-xl font-bold">−</Text>
+                  </TouchableOpacity>
+                  <Text className="text-white text-2xl font-semibold w-10 text-center">{boardSize}</Text>
+                  <TouchableOpacity
+                    onPress={() => setBoardSize((p) => Math.min(Math.min(48, selectedCount), p + 1))}
+                    disabled={boardSize >= Math.min(48, selectedCount)}
+                    className={`w-10 h-10 rounded-full items-center justify-center border ${
+                      boardSize >= Math.min(48, selectedCount) ? 'border-slate-700 opacity-40' : 'border-slate-500'
+                    }`}
+                  >
+                    <Text className="text-white text-xl font-bold">+</Text>
+                  </TouchableOpacity>
+                </View>
+                {boardSize < selectedCount && (
+                  <Text className="text-slate-500 text-xs text-center mt-3">
+                    {boardSize} will be randomly drawn from your {selectedCount} picks
+                  </Text>
+                )}
+              </View>
+            )}
+
             <Button
               title="Create Game"
               size="lg"

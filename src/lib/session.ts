@@ -7,8 +7,11 @@ export async function createSession(
   hostId: string,
   packId: string | null,
   characterPool: string[],
+  boardSize?: number,
 ): Promise<GameSession> {
   const join_code = generateCode(6);
+  const pool = shuffled(characterPool);
+  const finalPool = boardSize && boardSize < pool.length ? pool.slice(0, boardSize) : pool;
 
   const { data, error } = await supabase
     .from('game_sessions')
@@ -16,7 +19,7 @@ export async function createSession(
       join_code,
       host_id: hostId,
       ...(packId ? { pack_id: packId } : {}),
-      character_pool: shuffled(characterPool),
+      character_pool: finalPool,
       status: 'waiting',
     })
     .select()
