@@ -103,8 +103,8 @@ export default function CharacterSelect() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-surface items-center justify-center">
-        <ActivityIndicator color="#6471f1" />
+      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+        <ActivityIndicator color="#7C3AED" />
       </SafeAreaView>
     );
   }
@@ -113,11 +113,11 @@ export default function CharacterSelect() {
   const hasConfirmed = !!myCharField;
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
+    <SafeAreaView className="flex-1 bg-background">
       <ScreenHeader title="Pick Your Character" showBack={false} />
 
       <ScrollView className="flex-1 px-2" showsVerticalScrollIndicator={false}>
-        <Text className="text-slate-400 text-sm text-center px-4 mb-4">
+        <Text className="text-gray-500 text-sm text-center px-4 mb-4">
           {hasConfirmed
             ? 'Waiting for your opponent to pick…'
             : 'Tap a character to select them as your secret identity'}
@@ -145,17 +145,17 @@ export default function CharacterSelect() {
         )}
         {hasConfirmed && (
           <View className="items-center mt-4 mb-8 gap-2">
-            <Text className="text-green-400 font-semibold">✓ Character selected</Text>
-            <Text className="text-slate-500 text-xs">Waiting for opponent…</Text>
+            <Text className="text-green-600 font-semibold">✓ Character selected</Text>
+            <Text className="text-gray-400 text-xs">Waiting for opponent…</Text>
           </View>
         )}
       </ScrollView>
 
       {/* Confirm modal */}
       <Modal visible={confirmVisible} transparent animationType="fade">
-        <View className="flex-1 bg-black/70 items-center justify-center px-8">
-          <View className="bg-surface-card rounded-3xl p-6 w-full items-center border border-slate-700">
-            <Text className="text-white text-lg font-bold mb-2">Confirm Character</Text>
+        <View className="flex-1 bg-black/60 items-center justify-center px-8">
+          <View className="bg-white rounded-3xl p-6 w-full items-center border border-gray-200">
+            <Text className="text-navy text-lg font-bold mb-2">Confirm Character</Text>
             {selected && (
               <>
                 <Image
@@ -163,8 +163,8 @@ export default function CharacterSelect() {
                   className="w-28 h-28 rounded-2xl my-3"
                   resizeMode="cover"
                 />
-                <Text className="text-white font-semibold text-base mb-1">{selected.name}</Text>
-                <Text className="text-slate-400 text-xs text-center mb-5">
+                <Text className="text-navy font-semibold text-base mb-1">{selected.name}</Text>
+                <Text className="text-gray-500 text-xs text-center mb-5">
                   Once confirmed, your opponent will try to guess this character.
                 </Text>
               </>

@@ -22,17 +22,17 @@ export function TurnIndicator({ isMyTurn, turnCount }: TurnIndicatorProps) {
   const animStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   return (
-    <View className="flex-row items-center justify-between px-4 py-2 bg-surface-card rounded-xl mb-3">
+    <View className="flex-row items-center justify-between px-4 py-2 bg-white rounded-xl mb-3 border border-gray-200">
       <View className="flex-row items-center gap-2">
         <Animated.View
           style={animStyle}
-          className={`w-3 h-3 rounded-full ${isMyTurn ? 'bg-green-400' : 'bg-slate-500'}`}
+          className={`w-3 h-3 rounded-full ${isMyTurn ? 'bg-green-500' : 'bg-gray-300'}`}
         />
-        <Text className={`font-semibold text-sm ${isMyTurn ? 'text-green-400' : 'text-slate-400'}`}>
+        <Text className={`font-semibold text-sm ${isMyTurn ? 'text-green-600' : 'text-gray-400'}`}>
           {isMyTurn ? 'Your Turn' : "Opponent's Turn"}
         </Text>
       </View>
-      <Text className="text-slate-500 text-xs">Round {turnCount + 1}</Text>
+      <Text className="text-gray-400 text-xs">Round {turnCount + 1}</Text>
     </View>
   );
 }

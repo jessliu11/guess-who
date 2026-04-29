@@ -9,7 +9,7 @@ interface SafeScrollViewProps extends ScrollViewProps {
 
 export function SafeScrollView({ children, padded = true, className, ...props }: SafeScrollViewProps) {
   return (
-    <SafeAreaView className="flex-1 bg-surface">
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView
         className={`flex-1 ${padded ? 'px-4' : ''} ${className ?? ''}`}
         contentContainerStyle={{ paddingBottom: 32 }}

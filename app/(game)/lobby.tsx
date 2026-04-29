@@ -101,8 +101,8 @@ export default function Lobby() {
 
   if (loading || !session) {
     return (
-      <SafeAreaView className="flex-1 bg-surface items-center justify-center">
-        <ActivityIndicator color="#6471f1" />
+      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+        <ActivityIndicator color="#7C3AED" />
       </SafeAreaView>
     );
   }
@@ -110,28 +110,28 @@ export default function Lobby() {
   const isHost = myRole === 'host';
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
+    <SafeAreaView className="flex-1 bg-background">
       <ScreenHeader title="Waiting Room" showBack={false} />
       <View className="flex-1 px-6 items-center justify-center gap-8">
         {isHost ? (
           <>
             <View className="items-center gap-2">
-              <Text className="text-slate-400 text-sm">Share this code with your friend</Text>
+              <Text className="text-gray-500 text-sm">Share this code with your friend</Text>
               <JoinCodeDisplay code={session.join_code} />
             </View>
 
             <View className="flex-row items-center gap-3">
               <Animated.View style={dotStyle} className="w-3 h-3 rounded-full bg-amber-400" />
-              <Text className="text-slate-400 text-sm">Waiting for opponent to join…</Text>
+              <Text className="text-gray-500 text-sm">Waiting for opponent to join…</Text>
             </View>
           </>
         ) : (
           <View className="items-center gap-3">
             <Text className="text-4xl mb-2">✅</Text>
-            <Text className="text-white text-xl font-bold">You're In!</Text>
+            <Text className="text-navy text-xl font-bold">You're In!</Text>
             <View className="flex-row items-center gap-3">
               <Animated.View style={dotStyle} className="w-3 h-3 rounded-full bg-amber-400" />
-              <Text className="text-slate-400 text-sm">Waiting for host to start…</Text>
+              <Text className="text-gray-500 text-sm">Waiting for host to start…</Text>
             </View>
           </View>
         )}

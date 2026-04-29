@@ -1,10 +1,18 @@
 import '../src/globals.css';
 import React, { useEffect } from 'react';
+import { Text } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {
+  useFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 import { supabase } from '../src/lib/supabase';
 import { useAuthStore } from '../src/store/authStore';
 import { useSubscriptionStore } from '../src/store/subscriptionStore';
@@ -18,20 +26,16 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, isLoading, setUser, setSession, setProfile, setLoading } = useAuthStore();
 
   useEffect(() => {
-    // Initialize RevenueCat (anonymous until user signs in)
     configureRevenueCat();
 
-    // Listen to Supabase auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Identify user in RevenueCat
           identifyUser(session.user.id).catch(() => {});
 
-          // Fetch profile
           const { data: profile } = await supabase
             .from('profiles')
             .select()
@@ -39,7 +43,6 @@ function AuthGate({ children }: { children: React.ReactNode }) {
             .single();
           setProfile(profile ?? null);
 
-          // Check premium entitlement
           refreshEntitlement().catch(() => {
             useSubscriptionStore.getState().setLoading(false);
           });
@@ -73,11 +76,25 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      if (!(Text as any).defaultProps) (Text as any).defaultProps = {};
+      (Text as any).defaultProps.style = { fontFamily: 'Inter_400Regular' };
+    }
+  }, [fontsLoaded]);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AuthGate>
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0F172A' } }}>
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#FAF8F2' } }}>
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="(game)" />

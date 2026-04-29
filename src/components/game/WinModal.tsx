@@ -24,19 +24,19 @@ export function WinModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <View className="flex-1 bg-black/70 items-center justify-center px-6">
-        <View className="bg-surface-card rounded-3xl p-8 w-full items-center border border-slate-700">
+      <View className="flex-1 bg-black/60 items-center justify-center px-6">
+        <View className="bg-white rounded-3xl p-8 w-full items-center border border-gray-200">
           <Text className="text-5xl mb-2">{iWon ? '🏆' : '😔'}</Text>
-          <Text className={`text-3xl font-bold mb-1 ${iWon ? 'text-accent' : 'text-slate-300'}`}>
+          <Text className={`text-3xl font-bold mb-1 ${iWon ? 'text-accent' : 'text-gray-500'}`}>
             {iWon ? 'You Win!' : 'You Lose!'}
           </Text>
-          <Text className="text-slate-400 text-sm mb-6">
+          <Text className="text-gray-400 text-sm mb-6">
             {iWon ? 'Great guess!' : 'Better luck next time!'}
           </Text>
 
           {opponentCharacter && (
             <View className="items-center mb-6">
-              <Text className="text-slate-400 text-xs mb-2 uppercase tracking-wider">
+              <Text className="text-gray-400 text-xs mb-2 uppercase tracking-wider">
                 Opponent was
               </Text>
               <Image
@@ -44,7 +44,7 @@ export function WinModal({
                 className="w-24 h-24 rounded-2xl mb-2"
                 resizeMode="cover"
               />
-              <Text className="text-white font-semibold text-base">
+              <Text className="text-navy font-semibold text-base">
                 {opponentCharacter.name}
               </Text>
             </View>

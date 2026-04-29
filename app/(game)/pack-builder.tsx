@@ -93,17 +93,17 @@ export default function PackBuilder() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
+    <SafeAreaView className="flex-1 bg-background">
       <ScreenHeader title="Pack Builder" />
 
       {/* Pack name */}
       <View className="px-4 pb-2">
         <TextInput
-          className="bg-surface-card border border-slate-600 rounded-xl px-4 py-3 text-white text-base"
+          className="bg-white border border-gray-200 rounded-xl px-4 py-3 text-navy text-base"
           value={packName}
           onChangeText={setPackName}
           placeholder="Pack name (e.g. 90s Icons)"
-          placeholderTextColor="#64748B"
+          placeholderTextColor="#9CA3AF"
         />
       </View>
 
@@ -117,12 +117,12 @@ export default function PackBuilder() {
               className={`px-3 py-1.5 rounded-xl border ${
                 selectedCategory === cat.id
                   ? 'bg-primary-600 border-primary-600'
-                  : 'bg-surface-card border-slate-700'
+                  : 'bg-white border-gray-200'
               }`}
             >
               <Text
                 className={`text-xs font-medium ${
-                  selectedCategory === cat.id ? 'text-white' : 'text-slate-400'
+                  selectedCategory === cat.id ? 'text-white' : 'text-gray-500'
                 }`}
               >
                 {cat.emoji} {cat.label}
@@ -133,14 +133,14 @@ export default function PackBuilder() {
       </ScrollView>
 
       <View className="px-4 py-1">
-        <Text className="text-slate-400 text-xs">
+        <Text className="text-gray-400 text-xs">
           {selectedIds.size}/{EXTENDED_PACK_MAX} selected (min {EXTENDED_PACK_MIN})
         </Text>
       </View>
 
       {loadingChars ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#6471f1" />
+          <ActivityIndicator color="#7C3AED" />
         </View>
       ) : (
         <ScrollView className="flex-1 px-1" showsVerticalScrollIndicator={false}>

@@ -8,6 +8,7 @@ interface CharacterCardProps {
   selected?: boolean;
   onPress?: () => void;
   size?: 'sm' | 'md';
+  borderColor?: string;
 }
 
 export function CharacterCard({
@@ -16,25 +17,30 @@ export function CharacterCard({
   selected = false,
   onPress,
   size = 'sm',
+  borderColor,
 }: CharacterCardProps) {
   const dim = size === 'sm' ? 'w-[72px]' : 'w-[90px]';
   const imgH = size === 'sm' ? 'h-16' : 'h-20';
   const textSize = size === 'sm' ? 'text-[9px]' : 'text-[11px]';
+  const nameplateH = size === 'sm' ? 'h-[22px]' : 'h-[26px]';
+
+  const borderStyle = selected
+    ? { borderColor: '#7C3AED', borderWidth: 2 }
+    : borderColor
+    ? { borderColor, borderWidth: 2 }
+    : eliminated
+    ? { borderColor: 'transparent', borderWidth: 2 }
+    : { borderColor: '#E5E0D5', borderWidth: 2 };
 
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={!onPress}
       activeOpacity={0.75}
-      className={`${dim} m-1 rounded-xl overflow-hidden border-2 ${
-        selected
-          ? 'border-primary-500'
-          : eliminated
-          ? 'border-transparent'
-          : 'border-surface-elevated'
-      }`}
+      className={`${dim} m-1 rounded-xl overflow-hidden`}
+      style={borderStyle}
     >
-      <View className={`bg-surface-card ${eliminated ? 'opacity-30' : ''}`}>
+      <View className={`bg-white ${eliminated ? 'opacity-30' : ''}`}>
         <Image
           source={{ uri: character.image_url }}
           className={`w-full ${imgH}`}
@@ -42,13 +48,20 @@ export function CharacterCard({
         />
         {eliminated && (
           <View className="absolute inset-0 items-center justify-center">
-            <Text className="text-white/80 text-2xl font-bold">✕</Text>
+            <Text className="text-gray-600 text-2xl font-bold">✕</Text>
           </View>
         )}
-        <View className="px-1 py-1 bg-surface-elevated">
+        {selected && (
+          <View className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary-600 items-center justify-center">
+            <Text className="text-white text-[10px] font-bold">✓</Text>
+          </View>
+        )}
+        <View className={`px-1 ${nameplateH} bg-gray-50 items-center justify-center`}>
           <Text
-            className={`text-white ${textSize} text-center font-medium`}
+            className={`text-navy ${textSize} text-center font-medium`}
             numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
           >
             {character.name}
           </Text>

@@ -2,116 +2,96 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
-import { LinearGradient } from 'expo-linear-gradient';
-
-function ActionCard({
-  emoji,
-  title,
-  description,
-  gradient,
-  onPress,
-}: {
-  emoji: string;
-  title: string;
-  description: string;
-  gradient: [string, string];
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.85} className="flex-1">
-      <LinearGradient
-        colors={gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="rounded-2xl p-5 h-40 justify-between"
-      >
-        <Text className="text-4xl">{emoji}</Text>
-        <View>
-          <Text className="text-white text-xl font-bold">{title}</Text>
-          <Text className="text-white/70 text-xs mt-0.5">{description}</Text>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-}
 
 export default function Home() {
   const router = useRouter();
   const { profile } = useAuth();
 
+  const winRate = profile && profile.games_played > 0
+    ? Math.round((profile.games_won / profile.games_played) * 100)
+    : 0;
+
   return (
-    <SafeAreaView className="flex-1 bg-surface">
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View className="pt-6 pb-4 flex-row items-center justify-between">
-          <View>
-            <Text className="text-slate-400 text-sm">Welcome back,</Text>
-            <Text className="text-white text-2xl font-bold">
-              {profile?.display_name ?? 'Player'}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => router.push('/(tabs)/profile')}
-            className="w-11 h-11 bg-surface-card rounded-full items-center justify-center border border-slate-700"
-          >
-            <Text className="text-lg">👤</Text>
-          </TouchableOpacity>
+        <View className="pt-6 pb-2">
+          <Text className="text-gray-500 text-sm">Hey there 👋</Text>
+          <Text className="text-navy text-3xl font-bold mt-0.5" style={{ fontFamily: 'Inter_700Bold' }}>Ready to play?</Text>
         </View>
 
         {/* Action cards */}
-        <View className="flex-row gap-3 mb-6">
-          <ActionCard
-            emoji="🎯"
-            title="Host Game"
-            description="Create a session & invite a friend"
-            gradient={['#4040ca', '#6471f1']}
+        <View className="gap-3 mt-5 mb-6">
+          {/* Host Game — solid purple */}
+          <TouchableOpacity
             onPress={() => router.push('/(game)/setup?mode=host')}
-          />
-          <ActionCard
-            emoji="🔗"
-            title="Join Game"
-            description="Enter a code to join"
-            gradient={['#065f46', '#059669']}
+            activeOpacity={0.85}
+            className="bg-primary-600 rounded-2xl p-5 flex-row items-center"
+          >
+            <View className="w-12 h-12 rounded-xl items-center justify-center mr-4" style={{ backgroundColor: 'rgba(255,255,255,0.18)' }}>
+              <Ionicons name="flash" size={22} color="white" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-white text-lg font-bold">Host Game</Text>
+              <Text className="text-white/75 text-sm mt-0.5">Pick characters, invite a friend</Text>
+            </View>
+            <Ionicons name="arrow-forward" size={20} color="rgba(255,255,255,0.8)" />
+          </TouchableOpacity>
+
+          {/* Join Game — white card */}
+          <TouchableOpacity
             onPress={() => router.push('/(game)/setup?mode=join')}
-          />
+            activeOpacity={0.85}
+            className="bg-white rounded-2xl p-5 flex-row items-center border border-gray-200"
+          >
+            <View className="w-12 h-12 rounded-xl items-center justify-center mr-4" style={{ backgroundColor: '#FDE8EC' }}>
+              <Ionicons name="log-in-outline" size={22} color="#E11D48" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-navy text-lg font-bold">Join Game</Text>
+              <Text className="text-gray-500 text-sm mt-0.5">Enter a 6-letter code from a friend</Text>
+            </View>
+            <Ionicons name="arrow-forward" size={20} color="#9CA3AF" />
+          </TouchableOpacity>
         </View>
 
         {/* Stats */}
         {profile && (
-          <View className="bg-surface-card rounded-2xl p-4 border border-slate-700 mb-6">
-            <Text className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-3">
-              Your Stats
-            </Text>
-            <View className="flex-row justify-around">
-              <View className="items-center">
-                <Text className="text-white text-2xl font-bold">{profile.games_played}</Text>
-                <Text className="text-slate-500 text-xs mt-0.5">Played</Text>
+          <View className="mb-6">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-navy text-lg font-bold">Your Stats</Text>
+              <Text className="text-gray-400 text-sm">All time</Text>
+            </View>
+            <View className="flex-row gap-3">
+              <View className="flex-1 bg-white rounded-2xl p-5 items-center border border-gray-200">
+                <Text className="text-navy text-2xl font-bold">{profile.games_played}</Text>
+                <Text className="text-gray-400 text-xs font-medium mt-1 tracking-wider">PLAYED</Text>
               </View>
-              <View className="w-px bg-slate-700" />
-              <View className="items-center">
-                <Text className="text-white text-2xl font-bold">{profile.games_won}</Text>
-                <Text className="text-slate-500 text-xs mt-0.5">Won</Text>
+              <View className="flex-1 bg-white rounded-2xl p-5 items-center border border-gray-200">
+                <Text className="text-navy text-2xl font-bold">{profile.games_won}</Text>
+                <Text className="text-gray-400 text-xs font-medium mt-1 tracking-wider">WON</Text>
               </View>
-              <View className="w-px bg-slate-700" />
-              <View className="items-center">
-                <Text className="text-white text-2xl font-bold">
-                  {profile.games_played > 0
-                    ? Math.round((profile.games_won / profile.games_played) * 100)
-                    : 0}%
-                </Text>
-                <Text className="text-slate-500 text-xs mt-0.5">Win Rate</Text>
+              <View className="flex-1 bg-white rounded-2xl p-5 items-center border border-gray-200">
+                <Text className="text-navy text-2xl font-bold">{winRate}%</Text>
+                <Text className="text-gray-400 text-xs font-medium mt-1 tracking-wider">WIN RATE</Text>
               </View>
             </View>
           </View>
         )}
 
-        {/* Hint */}
-        <View className="bg-primary-950 rounded-2xl p-4 border border-primary-900 mb-8">
-          <Text className="text-primary-300 text-sm font-medium mb-1">💡 Tip</Text>
-          <Text className="text-slate-400 text-xs leading-relaxed">
-            Call or video chat your friend while you play — whoever guesses the other player's character first wins!
-          </Text>
+        {/* Tip */}
+        <View className="rounded-2xl p-4 mb-8 flex-row items-start gap-3" style={{ backgroundColor: '#FEF3C7' }}>
+          <View className="w-9 h-9 rounded-xl bg-white/60 items-center justify-center mt-0.5">
+            <Ionicons name="call-outline" size={18} color="#92400E" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-amber-900 text-sm font-bold mb-0.5">Pro tip</Text>
+            <Text className="text-amber-800 text-sm leading-relaxed">
+              Hop on a call with your opponent while you play for the full experience.
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

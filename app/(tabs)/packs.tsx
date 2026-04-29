@@ -10,13 +10,27 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { useAuth } from '../../src/hooks/useAuth';
 import { getSystemPacks, getMyPacks, deletePack, getCharactersByIds } from '../../src/lib/packs';
 import { getMyCustomCharacters, deleteCustomCharacter } from '../../src/lib/characters';
 import type { CharacterPack, Character } from '../../src/types/game.types';
 
-function PackSection({
+function PackIcon({ pack }: { pack: CharacterPack }) {
+  const imgUrl = pack.preview_image_urls?.[0];
+  return (
+    <View className="w-11 h-11 rounded-xl overflow-hidden bg-gray-100 items-center justify-center mr-3">
+      {imgUrl ? (
+        <Image source={{ uri: imgUrl }} className="w-full h-full" resizeMode="cover" />
+      ) : (
+        <Text className="text-xl">🎴</Text>
+      )}
+    </View>
+  );
+}
+
+function PackRow({
   pack,
   isExpanded,
   isLocked,
@@ -24,6 +38,7 @@ function PackSection({
   loadingChars,
   onToggleExpand,
   onDelete,
+  showShareCode,
 }: {
   pack: CharacterPack;
   isExpanded: boolean;
@@ -32,31 +47,35 @@ function PackSection({
   loadingChars: boolean;
   onToggleExpand: () => void;
   onDelete?: () => void;
+  showShareCode?: boolean;
 }) {
   return (
-    <View className="mb-3 rounded-2xl border border-slate-700 bg-surface-card overflow-hidden">
-      {/* Header row */}
+    <View className="mb-2 rounded-2xl bg-white border border-gray-200 overflow-hidden">
       <TouchableOpacity
         onPress={onToggleExpand}
         activeOpacity={0.7}
-        className="px-4 py-3 flex-row items-center justify-between"
+        className="px-4 py-4 flex-row items-center"
       >
+        <PackIcon pack={pack} />
+
         <View className="flex-1">
-          <View className="flex-row items-center gap-2">
-            <Text className={`font-semibold text-sm ${isLocked ? 'text-slate-400' : 'text-white'}`}>
+          <View className="flex-row items-center gap-2 flex-wrap">
+            <Text className={`font-semibold text-sm ${isLocked ? 'text-gray-400' : 'text-navy'}`}>
               {pack.name}
             </Text>
-            {pack.requires_premium && !isLocked && (
-              <View className="bg-accent/20 px-2 py-0.5 rounded-full border border-accent/30">
-                <Text className="text-accent text-xs font-medium">PRO</Text>
+            {showShareCode && pack.share_code && (
+              <View className="bg-primary-600 px-2 py-0.5 rounded-full">
+                <Text className="text-white text-[10px] font-bold">{pack.share_code}</Text>
               </View>
             )}
-            {isLocked && <Text className="text-slate-500 text-xs">🔒 Pro</Text>}
+            {isLocked && (
+              <View className="bg-navy px-2 py-0.5 rounded-full flex-row items-center gap-1">
+                <Text className="text-accent text-[10px]">⭐</Text>
+                <Text className="text-white text-[10px] font-bold">PRO</Text>
+              </View>
+            )}
           </View>
-          {pack.share_code && !pack.is_system && (
-            <Text className="text-slate-500 text-xs mt-0.5">Code: {pack.share_code}</Text>
-          )}
-          <Text className="text-slate-500 text-xs mt-0.5">
+          <Text className="text-gray-400 text-xs mt-0.5">
             {pack.character_ids.length} characters
           </Text>
         </View>
@@ -67,33 +86,40 @@ function PackSection({
               onPress={onDelete}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Text className="text-red-400 text-sm">Delete</Text>
+              <Text className="text-danger text-sm">Delete</Text>
             </TouchableOpacity>
           )}
-          <Text className="text-slate-400 text-lg">{isExpanded ? '▾' : '▸'}</Text>
+          {isLocked ? (
+            <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" />
+          ) : (
+            <Ionicons
+              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color="#9CA3AF"
+            />
+          )}
         </View>
       </TouchableOpacity>
 
-      {/* Character grid */}
-      {isExpanded && (
-        <View className="border-t border-slate-700 px-2 pb-3 pt-2">
+      {isExpanded && !isLocked && (
+        <View className="border-t border-gray-200 px-3 pb-3 pt-2">
           {loadingChars ? (
-            <ActivityIndicator color="#6471f1" className="my-4" />
+            <ActivityIndicator color="#7C3AED" className="my-4" />
           ) : (
             <View className="flex-row flex-wrap">
               {characters.map((character) => (
                 <View
                   key={character.id}
                   style={{ width: '23%', margin: '1%' }}
-                  className="rounded-xl overflow-hidden border border-slate-700"
+                  className="rounded-xl overflow-hidden"
                 >
                   <Image
                     source={{ uri: character.image_url }}
                     style={{ width: '100%', aspectRatio: 1 }}
                     resizeMode="cover"
                   />
-                  <View className="bg-surface px-1 py-1">
-                    <Text className="text-white text-[10px] text-center" numberOfLines={1}>
+                  <View className="bg-gray-50 px-1 py-1">
+                    <Text className="text-navy text-[10px] text-center" numberOfLines={1}>
                       {character.name}
                     </Text>
                   </View>
@@ -136,8 +162,6 @@ export default function Packs() {
 
   useEffect(() => { load(); }, [user]);
 
-  // Refresh custom characters whenever the tab comes back into focus
-  // (e.g. after returning from the character creator)
   useFocusEffect(
     useCallback(() => {
       if (user) {
@@ -200,8 +224,8 @@ export default function Packs() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-surface items-center justify-center">
-        <ActivityIndicator color="#6471f1" />
+      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+        <ActivityIndicator color="#7C3AED" />
       </SafeAreaView>
     );
   }
@@ -210,100 +234,80 @@ export default function Packs() {
   const extendedPacks = systemPacks.filter((p) => p.requires_premium);
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
-        <View className="pt-6 pb-4 flex-row items-center justify-between">
+        {/* Header */}
+        <View className="pt-6 pb-4 flex-row items-end justify-between">
           <View>
-            <Text className="text-white text-2xl font-bold">Packs</Text>
-            <Text className="text-slate-400 text-sm mt-0.5">Browse & build character packs</Text>
+            <Text className="text-gray-400 text-xs font-medium">Your collection</Text>
+            <Text className="text-navy text-3xl font-bold mt-0.5" style={{ fontFamily: 'Inter_700Bold' }}>Packs</Text>
           </View>
-          {isPremium && (
-            <TouchableOpacity
-              onPress={() => router.push('/(game)/pack-builder')}
-              className="bg-primary-600 px-4 py-2 rounded-xl"
-            >
-              <Text className="text-white text-sm font-semibold">+ Build</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            onPress={() => router.push('/(game)/character-creator' as any)}
+            className="bg-navy px-4 py-2 rounded-full flex-row items-center gap-1.5"
+          >
+            <Ionicons name="add" size={16} color="white" />
+            <Text className="text-white text-sm font-semibold">Create</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Build CTA for free users */}
-        {!isPremium && (
-          <TouchableOpacity
-            onPress={() => router.push('/paywall')}
-            className="bg-primary-950 border border-primary-700 rounded-2xl p-4 mb-5 flex-row items-center gap-3"
-          >
-            <Text className="text-2xl">⭐</Text>
-            <View className="flex-1">
-              <Text className="text-white font-semibold text-sm">Build Custom Packs</Text>
-              <Text className="text-slate-400 text-xs mt-0.5">
-                Upgrade to Pro to create & share custom character packs
-              </Text>
-            </View>
-            <Text className="text-primary-400 font-bold">›</Text>
-          </TouchableOpacity>
-        )}
-
         {/* My Characters */}
-        <View className="mb-5">
+        <View className="mb-6">
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-slate-300 font-semibold text-sm">My Characters</Text>
-            <TouchableOpacity
-              onPress={() => router.push('/(game)/character-creator' as any)}
-              className="bg-primary-600 px-3 py-1.5 rounded-lg"
-            >
-              <Text className="text-white text-xs font-semibold">+ Create</Text>
-            </TouchableOpacity>
+            <Text className="text-navy font-bold text-base">My Characters</Text>
+            {customCharacters.length > 0 && (
+              <Text className="text-gray-400 text-xs">Long press to delete</Text>
+            )}
           </View>
 
-          {customCharacters.length === 0 ? (
-            <TouchableOpacity
-              onPress={() => router.push('/(game)/character-creator' as any)}
-              className="bg-surface-card border border-dashed border-slate-600 rounded-2xl p-5 items-center gap-2"
-            >
-              <Text className="text-2xl">🎨</Text>
-              <Text className="text-white font-semibold text-sm">Create your first character</Text>
-              <Text className="text-slate-500 text-xs text-center">
-                Add anyone — friends, family, or anyone you like
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <View className="bg-surface-card border border-slate-700 rounded-2xl p-3">
-              <View className="flex-row flex-wrap">
-                {customCharacters.map((character) => (
-                  <View key={character.id} style={{ width: '23%', margin: '1%' }}>
-                    <TouchableOpacity
-                      onLongPress={() => handleDeleteCustomCharacter(character)}
-                      activeOpacity={0.8}
-                      className="rounded-xl overflow-hidden border border-slate-700"
-                    >
-                      <Image
-                        source={{ uri: character.image_url }}
-                        style={{ width: '100%', aspectRatio: 1 }}
-                        resizeMode="cover"
-                      />
-                      <View className="bg-surface px-1 py-1">
-                        <Text className="text-white text-[10px] text-center" numberOfLines={1}>
-                          {character.name}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-1">
+            <View className="flex-row px-1 gap-2">
+              {customCharacters.map((character) => (
+                <TouchableOpacity
+                  key={character.id}
+                  onLongPress={() => handleDeleteCustomCharacter(character)}
+                  activeOpacity={0.8}
+                  className="items-center"
+                >
+                  <View className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-200">
+                    <Image
+                      source={{ uri: character.image_url }}
+                      className="w-full h-full"
+                      resizeMode="cover"
+                    />
                   </View>
-                ))}
-              </View>
-              <Text className="text-slate-600 text-[10px] text-center mt-2">
-                Long-press a character to delete
-              </Text>
+                  <Text className="text-navy text-xs mt-1 text-center max-w-[60px]" numberOfLines={1}>
+                    {character.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+
+              {/* Add new character */}
+              <TouchableOpacity
+                onPress={() => router.push('/(game)/character-creator' as any)}
+                activeOpacity={0.7}
+                className="items-center"
+              >
+                <View
+                  className="w-16 h-16 rounded-2xl items-center justify-center border-2 border-dashed border-gray-300"
+                >
+                  <Ionicons name="add" size={24} color="#9CA3AF" />
+                </View>
+                <Text className="text-gray-400 text-xs mt-1">Add</Text>
+              </TouchableOpacity>
             </View>
-          )}
+          </ScrollView>
         </View>
 
         {/* My Packs */}
         {myPacks.length > 0 && (
-          <View className="mb-5">
-            <Text className="text-slate-300 font-semibold text-sm mb-3">My Packs</Text>
+          <View className="mb-6">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-navy font-bold text-base">My Packs</Text>
+              <Text className="text-gray-400 text-sm">{myPacks.length} pack{myPacks.length !== 1 ? 's' : ''}</Text>
+            </View>
             {myPacks.map((pack) => (
-              <PackSection
+              <PackRow
                 key={pack.id}
                 pack={pack}
                 isExpanded={expandedPackIds.has(pack.id)}
@@ -312,16 +316,20 @@ export default function Packs() {
                 loadingChars={loadingCharacters[pack.id] ?? false}
                 onToggleExpand={() => togglePackExpansion(pack)}
                 onDelete={() => handleDelete(pack)}
+                showShareCode
               />
             ))}
           </View>
         )}
 
         {/* Standard packs */}
-        <View className="mb-5">
-          <Text className="text-slate-300 font-semibold text-sm mb-3">Standard Packs — Free</Text>
+        <View className="mb-6">
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-navy font-bold text-base">Standard Packs</Text>
+            <Text className="text-gray-400 text-sm">Free for everyone</Text>
+          </View>
           {standardPacks.map((pack) => (
-            <PackSection
+            <PackRow
               key={pack.id}
               pack={pack}
               isExpanded={expandedPackIds.has(pack.id)}
@@ -336,11 +344,12 @@ export default function Packs() {
         {/* Extended packs */}
         {extendedPacks.length > 0 && (
           <View className="mb-8">
-            <Text className="text-slate-300 font-semibold text-sm mb-3">
-              Extended Packs — Pro
-            </Text>
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-navy font-bold text-base">Extended Packs</Text>
+              <Text className="text-gray-400 text-sm">Unlock with Pro</Text>
+            </View>
             {extendedPacks.map((pack) => (
-              <PackSection
+              <PackRow
                 key={pack.id}
                 pack={pack}
                 isExpanded={expandedPackIds.has(pack.id)}
@@ -353,6 +362,25 @@ export default function Packs() {
                 }}
               />
             ))}
+
+            {/* Upgrade to Pro banner */}
+            {!isPremium && (
+              <TouchableOpacity
+                onPress={() => router.push('/paywall')}
+                className="mt-2 rounded-2xl p-5 flex-row items-center gap-4"
+                style={{ backgroundColor: '#1E1B4B' }}
+                activeOpacity={0.85}
+              >
+                <View className="w-12 h-12 rounded-xl bg-accent items-center justify-center">
+                  <Text className="text-xl">⭐</Text>
+                </View>
+                <View className="flex-1">
+                  <Text className="text-white font-bold text-base">Upgrade to Pro</Text>
+                  <Text className="text-white/60 text-sm mt-0.5">Unlock extended packs + the Pack Builder</Text>
+                </View>
+                <Ionicons name="arrow-forward" size={20} color="rgba(255,255,255,0.7)" />
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </ScrollView>

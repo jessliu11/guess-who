@@ -20,25 +20,25 @@ export function JoinCodeDisplay({ code, label = 'Game Code' }: JoinCodeDisplayPr
 
   return (
     <View className="items-center">
-      <Text className="text-slate-400 text-sm font-medium mb-3 tracking-widest uppercase">
+      <Text className="text-gray-400 text-sm font-medium mb-3 tracking-widest uppercase">
         {label}
       </Text>
       <View className="flex-row gap-2 mb-4">
         {chars.map((ch, i) => (
           <View
             key={i}
-            className="w-12 h-14 bg-surface-elevated border border-slate-600 rounded-xl items-center justify-center"
+            className="w-12 h-14 bg-white border border-gray-200 rounded-xl items-center justify-center"
           >
-            <Text className="text-white text-2xl font-bold tracking-wider">{ch}</Text>
+            <Text className="text-navy text-2xl font-bold tracking-wider">{ch}</Text>
           </View>
         ))}
       </View>
       <View className="flex-row gap-3">
         <TouchableOpacity
           onPress={handleCopy}
-          className="flex-row items-center gap-1.5 px-4 py-2 bg-surface-elevated rounded-xl border border-slate-600"
+          className="flex-row items-center gap-1.5 px-4 py-2 bg-gray-100 rounded-xl border border-gray-200"
         >
-          <Text className="text-slate-300 text-sm">Copy</Text>
+          <Text className="text-navy text-sm">Copy</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={handleShare}

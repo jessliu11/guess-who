@@ -105,8 +105,8 @@ export default function Board() {
 
   if (loading || !session) {
     return (
-      <SafeAreaView className="flex-1 bg-surface items-center justify-center">
-        <ActivityIndicator color="#6471f1" />
+      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+        <ActivityIndicator color="#7C3AED" />
       </SafeAreaView>
     );
   }
@@ -119,12 +119,12 @@ export default function Board() {
   const isMine = isMyTurn();
 
   return (
-    <SafeAreaView className="flex-1 bg-surface">
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* My secret character */}
         <View className="px-4 pt-3 pb-2">
           {myCharacter && (
-            <View className="flex-row items-center gap-3 bg-surface-card rounded-2xl p-3 border border-slate-700 mb-3">
+            <View className="flex-row items-center gap-3 bg-white rounded-2xl p-3 border border-gray-200 mb-3">
               <View className="relative">
                 <Image
                   source={{ uri: myCharacter.image_url }}
@@ -137,9 +137,9 @@ export default function Board() {
                 </View>
               </View>
               <View>
-                <Text className="text-slate-400 text-xs">You are…</Text>
-                <Text className="text-white font-bold text-sm">{myCharacter.name}</Text>
-                <Text className="text-slate-500 text-xs">Don't show your opponent!</Text>
+                <Text className="text-gray-500 text-xs">You are…</Text>
+                <Text className="text-navy font-bold text-sm">{myCharacter.name}</Text>
+                <Text className="text-gray-400 text-xs">Don't show your opponent!</Text>
               </View>
             </View>
           )}
@@ -149,7 +149,7 @@ export default function Board() {
 
         {/* Character grid */}
         <View className="px-1">
-          <Text className="text-slate-400 text-xs font-medium uppercase tracking-wider px-3 mb-2">
+          <Text className="text-gray-400 text-xs font-medium uppercase tracking-wider px-3 mb-2">
             Your Board
           </Text>
           <CharacterGrid
@@ -176,8 +176,8 @@ export default function Board() {
         )}
         {!isMine && (
           <View className="px-4 mt-4 pb-8">
-            <View className="bg-surface-card rounded-2xl p-4 items-center border border-slate-700">
-              <Text className="text-slate-400 text-sm">Waiting for opponent's turn…</Text>
+            <View className="bg-white rounded-2xl p-4 items-center border border-gray-200">
+              <Text className="text-gray-400 text-sm">Waiting for opponent's turn…</Text>
             </View>
           </View>
         )}
@@ -185,11 +185,11 @@ export default function Board() {
 
       {/* Guess Modal */}
       <Modal visible={guessModalVisible} animationType="slide">
-        <SafeAreaView className="flex-1 bg-surface">
+        <SafeAreaView className="flex-1 bg-background">
           <View className="px-4 pt-4 pb-2 flex-row items-center justify-between">
-            <Text className="text-white text-lg font-bold">Who is your opponent?</Text>
+            <Text className="text-navy text-lg font-bold">Who is your opponent?</Text>
             <TouchableOpacity onPress={() => setGuessModalVisible(false)}>
-              <Text className="text-slate-400 text-base">Cancel</Text>
+              <Text className="text-gray-500 text-base">Cancel</Text>
             </TouchableOpacity>
           </View>
           <ScrollView className="flex-1 px-1">

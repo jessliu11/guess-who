@@ -17,9 +17,9 @@ interface ButtonProps extends TouchableOpacityProps {
 
 const variantStyles: Record<string, { container: string; text: string }> = {
   primary:   { container: 'bg-primary-600 active:bg-primary-700', text: 'text-white font-semibold' },
-  secondary: { container: 'bg-surface-card border border-slate-600 active:bg-surface-elevated', text: 'text-slate-100 font-semibold' },
-  ghost:     { container: 'bg-transparent active:bg-white/10', text: 'text-primary-400 font-semibold' },
-  danger:    { container: 'bg-red-600 active:bg-red-700', text: 'text-white font-semibold' },
+  secondary: { container: 'bg-white border border-gray-200 active:bg-gray-50', text: 'text-navy font-semibold' },
+  ghost:     { container: 'bg-transparent active:bg-primary-50', text: 'text-primary-600 font-semibold' },
+  danger:    { container: 'bg-transparent active:bg-red-50', text: 'text-danger font-semibold' },
 };
 
 const sizeStyles: Record<string, { container: string; text: string }> = {
@@ -50,7 +50,7 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator size="small" color="#fff" className="mr-2" />
+        <ActivityIndicator size="small" color="#7C3AED" className="mr-2" />
       ) : icon ? (
         <View className="mr-2">{icon}</View>
       ) : null}

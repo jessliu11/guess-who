@@ -28,13 +28,13 @@ export function JoinCodeInput({ value, onChange, length = 6 }: JoinCodeInputProp
               key={i}
               className={`w-12 h-14 rounded-xl items-center justify-center border ${
                 isCurrent
-                  ? 'border-primary-500 bg-surface-elevated'
+                  ? 'border-primary-500 bg-primary-50'
                   : char
-                  ? 'border-primary-700 bg-surface-elevated'
-                  : 'border-slate-600 bg-surface-card'
+                  ? 'border-primary-400 bg-primary-50'
+                  : 'border-gray-200 bg-white'
               }`}
             >
-              <Text className="text-white text-2xl font-bold">{char}</Text>
+              <Text className="text-navy text-2xl font-bold">{char}</Text>
             </View>
           );
         })}
