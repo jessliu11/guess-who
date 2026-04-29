@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,19 +16,43 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../src/hooks/useAuth';
-import { createCustomCharacter } from '../../src/lib/characters';
+import { useSubscription } from '../../src/hooks/useSubscription';
+import { createCustomCharacter, getMyCustomCharacters } from '../../src/lib/characters';
+import { FREE_CUSTOM_CHARACTER_LIMIT } from '../../src/constants/config';
 
 type QueueItem = { uri: string; name: string };
 
 export default function CharacterCreator() {
   const router = useRouter();
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
 
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
+  const [existingCount, setExistingCount] = useState(0);
+
+  useEffect(() => {
+    if (user && !isPremium) {
+      getMyCustomCharacters(user.id).then((chars) => setExistingCount(chars.length)).catch(() => {});
+    }
+  }, [user, isPremium]);
+
+  const remainingSlots = isPremium ? Infinity : Math.max(0, FREE_CUSTOM_CHARACTER_LIMIT - existingCount);
+  const atCap = !isPremium && remainingSlots <= 0;
 
   const pickFromLibrary = async () => {
+    if (atCap) {
+      Alert.alert(
+        'Character limit reached',
+        `Free accounts can save up to ${FREE_CUSTOM_CHARACTER_LIMIT} custom characters. Upgrade to Pro for unlimited uploads.`,
+        [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Upgrade to Pro', onPress: () => router.push('/paywall') },
+        ],
+      );
+      return;
+    }
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission needed', 'Allow access to your photo library to add character photos.');
@@ -37,7 +61,7 @@ export default function CharacterCreator() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsMultipleSelection: true,
-      selectionLimit: 20,
+      selectionLimit: isPremium ? 20 : remainingSlots,
       quality: 0.8,
     });
     if (!result.canceled) {
@@ -94,7 +118,13 @@ export default function CharacterCreator() {
         </TouchableOpacity>
         <View>
           <Text className="text-navy text-xl font-bold">Add Characters</Text>
-          <Text className="text-gray-400 text-xs">Up to 20 photos · name each one</Text>
+          {isPremium ? (
+            <Text className="text-gray-400 text-xs">Up to 20 photos · name each one</Text>
+          ) : (
+            <Text className="text-gray-400 text-xs">
+              {existingCount} of {FREE_CUSTOM_CHARACTER_LIMIT} slots used
+            </Text>
+          )}
         </View>
       </View>
 

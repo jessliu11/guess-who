@@ -156,6 +156,7 @@ export default function Board() {
             characters={characters}
             eliminated={myEliminated}
             onPress={isMine ? handleEliminate : undefined}
+            numColumns={characters.length === 36 ? 6 : 4}
           />
         </View>
 
@@ -198,6 +199,7 @@ export default function Board() {
               eliminated={[]}
               selectedId={guessSelected?.id}
               onPress={setGuessSelected}
+              numColumns={characters.length === 36 ? 6 : 4}
             />
           </ScrollView>
           <View className="px-4 pb-6 pt-3">

@@ -10,3 +10,6 @@ export const SESSION_EXPIRY_HOURS = 2;
 export const STANDARD_PACK_SIZE = 24;
 export const EXTENDED_PACK_MIN = 20;
 export const EXTENDED_PACK_MAX = 24;
+
+export const FREE_CATEGORY_IDS = ['celebrities', 'fictional', 'cartoons'];
+export const FREE_CUSTOM_CHARACTER_LIMIT = 12;

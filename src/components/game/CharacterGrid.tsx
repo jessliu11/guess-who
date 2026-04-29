@@ -8,6 +8,7 @@ interface CharacterGridProps {
   eliminated: string[];
   onPress?: (character: Character) => void;
   selectedId?: string;
+  numColumns?: number;
 }
 
 export function CharacterGrid({
@@ -15,11 +16,12 @@ export function CharacterGrid({
   eliminated,
   onPress,
   selectedId,
+  numColumns = 4,
 }: CharacterGridProps) {
   return (
     <FlatList
       data={characters}
-      numColumns={4}
+      numColumns={numColumns}
       keyExtractor={(c) => c.id}
       scrollEnabled={false}
       renderItem={({ item }) => (

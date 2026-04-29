@@ -15,6 +15,7 @@ import { Button } from '../../src/components/ui/Button';
 import { JoinCodeInput } from '../../src/components/ui/JoinCodeInput';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useSubscription } from '../../src/hooks/useSubscription';
+import { FREE_CATEGORY_IDS } from '../../src/constants/config';
 import { getSystemPacks, getCharactersByIds } from '../../src/lib/packs';
 import { getMyCustomCharacters } from '../../src/lib/characters';
 import { createSession, joinSession } from '../../src/lib/session';
@@ -22,7 +23,11 @@ import { useGameStore } from '../../src/store/gameStore';
 import type { CharacterPack, Character } from '../../src/types/game.types';
 
 const MIN_CHARACTERS = 4;
-const BOARD_SIZE_PRESETS = [4, 9, 12, 16];
+const BOARD_SIZE_PRESETS = [4, 9, 12, 16, 24, 32, 36];
+
+function displayPackName(name: string) {
+  return name.replace(/\s*[-–—]+\s*(Standard|Extended)\s*$/i, '').trim();
+}
 const PACK_BORDER_COLORS = ['#7C3AED', '#F59E0B', '#14B8A6', '#EC4899', '#3B82F6', '#10B981'];
 
 function SetupCharacterCard({
@@ -115,7 +120,7 @@ function PackSection({
 
         <View className="flex-1">
           <Text className={`font-semibold text-sm ${isLocked ? 'text-gray-400' : 'text-navy'}`}>
-            {pack.name}
+            {displayPackName(pack.name)}
           </Text>
           <Text className="text-gray-400 text-xs mt-0.5">
             {isExpanded && selectedInPack > 0
@@ -313,11 +318,20 @@ export default function Setup() {
       );
     }
 
-    const standardPacks = packs.filter((p) => !p.requires_premium);
+    const isFreePack = (p: CharacterPack) =>
+      FREE_CATEGORY_IDS.includes(p.category_id ?? '');
+    const standardPacks = packs
+      .filter((p) => !p.requires_premium)
+      .sort((a, b) => {
+        const aFree = isFreePack(a);
+        const bFree = isFreePack(b);
+        if (aFree && !bFree) return -1;
+        if (!aFree && bFree) return 1;
+        return 0;
+      });
     const extendedPacks = packs.filter((p) => p.requires_premium);
     const selectedCount = selectedIds.size;
     const canStart = selectedCount >= MIN_CHARACTERS;
-    const validPresets = BOARD_SIZE_PRESETS.filter((s) => s <= selectedCount || s <= MIN_CHARACTERS);
 
     return (
       <SafeAreaView className="flex-1 bg-background">
@@ -394,22 +408,28 @@ export default function Setup() {
             </View>
           )}
 
-          {standardPacks.map((pack, i) => (
-            <PackSection
-              key={pack.id}
-              pack={pack}
-              isExpanded={expandedPackIds.has(pack.id)}
-              isLocked={false}
-              characters={packCharacters[pack.id] ?? []}
-              loadingChars={loadingCharacters[pack.id] ?? false}
-              selectedIds={selectedIds}
-              onToggleExpand={() => togglePackExpansion(pack)}
-              onToggleCharacter={toggleCharacter}
-              onSelectAll={() => selectAllFromPack(pack)}
-              onDeselectAll={() => deselectAllFromPack(pack)}
-              packColor={PACK_BORDER_COLORS[i % PACK_BORDER_COLORS.length]}
-            />
-          ))}
+          {standardPacks.map((pack, i) => {
+            const isLocked = !isPremium && !isFreePack(pack);
+            return (
+              <PackSection
+                key={pack.id}
+                pack={pack}
+                isExpanded={expandedPackIds.has(pack.id)}
+                isLocked={isLocked}
+                characters={packCharacters[pack.id] ?? []}
+                loadingChars={loadingCharacters[pack.id] ?? false}
+                selectedIds={selectedIds}
+                onToggleExpand={() => {
+                  if (isLocked) { router.push('/paywall'); return; }
+                  togglePackExpansion(pack);
+                }}
+                onToggleCharacter={toggleCharacter}
+                onSelectAll={() => selectAllFromPack(pack)}
+                onDeselectAll={() => deselectAllFromPack(pack)}
+                packColor={PACK_BORDER_COLORS[i % PACK_BORDER_COLORS.length]}
+              />
+            );
+          })}
 
           {extendedPacks.length > 0 && extendedPacks.map((pack, i) => (
             <PackSection
@@ -440,7 +460,7 @@ export default function Setup() {
           {/* Board size presets */}
           <View className="mb-3">
             <Text className="text-gray-500 text-xs mb-2">Board size</Text>
-            <View className="flex-row gap-2">
+            <View className="flex-row flex-wrap gap-2">
               {BOARD_SIZE_PRESETS.map((size) => {
                 const isAvailable = size <= selectedCount;
                 const isActive = boardSize === size;
@@ -449,13 +469,13 @@ export default function Setup() {
                     key={size}
                     onPress={() => { if (isAvailable) setBoardSize(size); }}
                     disabled={!isAvailable}
-                    className="w-12 h-12 rounded-2xl items-center justify-center"
+                    className="w-10 h-10 rounded-2xl items-center justify-center"
                     style={{
                       backgroundColor: isActive ? '#7C3AED' : isAvailable ? '#F0EDE8' : '#F5F3F0',
                     }}
                   >
                     <Text
-                      className="text-base font-semibold"
+                      className="text-sm font-semibold"
                       style={{ color: isActive ? 'white' : isAvailable ? '#1E1B4B' : '#C4C0BA' }}
                     >
                       {size}

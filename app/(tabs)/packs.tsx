@@ -13,9 +13,14 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { useAuth } from '../../src/hooks/useAuth';
+import { FREE_CATEGORY_IDS } from '../../src/constants/config';
 import { getSystemPacks, getMyPacks, deletePack, getCharactersByIds } from '../../src/lib/packs';
 import { getMyCustomCharacters, deleteCustomCharacter } from '../../src/lib/characters';
 import type { CharacterPack, Character } from '../../src/types/game.types';
+
+function displayPackName(name: string) {
+  return name.replace(/\s*[-–—]+\s*(Standard|Extended)\s*$/i, '').trim();
+}
 
 function PackIcon({ pack }: { pack: CharacterPack }) {
   const imgUrl = pack.preview_image_urls?.[0];
@@ -37,8 +42,8 @@ function PackRow({
   characters,
   loadingChars,
   onToggleExpand,
-  onDelete,
-  showShareCode,
+  onDelete, // ability to delete customized packs
+  showShareCode, // there is the ability to share packs (for customized packs)
 }: {
   pack: CharacterPack;
   isExpanded: boolean;
@@ -61,7 +66,7 @@ function PackRow({
         <View className="flex-1">
           <View className="flex-row items-center gap-2 flex-wrap">
             <Text className={`font-semibold text-sm ${isLocked ? 'text-gray-400' : 'text-navy'}`}>
-              {pack.name}
+              {displayPackName(pack.name)}
             </Text>
             {showShareCode && pack.share_code && (
               <View className="bg-primary-600 px-2 py-0.5 rounded-full">
@@ -230,8 +235,6 @@ export default function Packs() {
     );
   }
 
-  const standardPacks = systemPacks.filter((p) => !p.requires_premium);
-  const extendedPacks = systemPacks.filter((p) => p.requires_premium);
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -322,67 +325,64 @@ export default function Packs() {
           </View>
         )}
 
-        {/* Standard packs */}
-        <View className="mb-6">
-          <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-navy font-bold text-base">Standard Packs</Text>
-            <Text className="text-gray-400 text-sm">Free for everyone</Text>
-          </View>
-          {standardPacks.map((pack) => (
-            <PackRow
-              key={pack.id}
-              pack={pack}
-              isExpanded={expandedPackIds.has(pack.id)}
-              isLocked={false}
-              characters={packCharacters[pack.id] ?? []}
-              loadingChars={loadingCharacters[pack.id] ?? false}
-              onToggleExpand={() => togglePackExpansion(pack)}
-            />
-          ))}
-        </View>
+        {/* All packs — Standard only (one per category) */}
+        {systemPacks.filter((p) => !p.requires_premium).length > 0 && (() => {
+          const isFreePack = (p: CharacterPack) =>
+            FREE_CATEGORY_IDS.includes(p.category_id ?? '');
+          const sortedPacks = systemPacks
+            .filter((p) => !p.requires_premium)
+            .sort((a, b) => {
+              const aFree = isFreePack(a);
+              const bFree = isFreePack(b);
+              if (aFree && !bFree) return -1;
+              if (!aFree && bFree) return 1;
+              return 0;
+            });
+          return (
+            <View className="mb-8">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-navy font-bold text-base">Packs</Text>
+                {!isPremium && <Text className="text-gray-400 text-sm">Unlock all with Pro</Text>}
+              </View>
+              {sortedPacks.map((pack) => {
+                const isLocked = !isPremium && !isFreePack(pack);
+                return (
+                  <PackRow
+                    key={pack.id}
+                    pack={pack}
+                    isExpanded={expandedPackIds.has(pack.id)}
+                    isLocked={isLocked}
+                    characters={packCharacters[pack.id] ?? []}
+                    loadingChars={loadingCharacters[pack.id] ?? false}
+                    onToggleExpand={() => {
+                      if (isLocked) { router.push('/paywall'); return; }
+                      togglePackExpansion(pack);
+                    }}
+                  />
+                );
+              })}
 
-        {/* Extended packs */}
-        {extendedPacks.length > 0 && (
-          <View className="mb-8">
-            <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-navy font-bold text-base">Extended Packs</Text>
-              <Text className="text-gray-400 text-sm">Unlock with Pro</Text>
+              {/* Upgrade to Pro banner */}
+              {!isPremium && (
+                <TouchableOpacity
+                  onPress={() => router.push('/paywall')}
+                  className="mt-2 rounded-2xl p-5 flex-row items-center gap-4"
+                  style={{ backgroundColor: '#1E1B4B' }}
+                  activeOpacity={0.85}
+                >
+                  <View className="w-12 h-12 rounded-xl bg-accent items-center justify-center">
+                    <Text className="text-xl">⭐</Text>
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-white font-bold text-base">Upgrade to Pro</Text>
+                    <Text className="text-white/60 text-sm mt-0.5">Unlock all 8 packs + Pack Builder</Text>
+                  </View>
+                  <Ionicons name="arrow-forward" size={20} color="rgba(255,255,255,0.7)" />
+                </TouchableOpacity>
+              )}
             </View>
-            {extendedPacks.map((pack) => (
-              <PackRow
-                key={pack.id}
-                pack={pack}
-                isExpanded={expandedPackIds.has(pack.id)}
-                isLocked={!isPremium}
-                characters={packCharacters[pack.id] ?? []}
-                loadingChars={loadingCharacters[pack.id] ?? false}
-                onToggleExpand={() => {
-                  if (!isPremium) { router.push('/paywall'); return; }
-                  togglePackExpansion(pack);
-                }}
-              />
-            ))}
-
-            {/* Upgrade to Pro banner */}
-            {!isPremium && (
-              <TouchableOpacity
-                onPress={() => router.push('/paywall')}
-                className="mt-2 rounded-2xl p-5 flex-row items-center gap-4"
-                style={{ backgroundColor: '#1E1B4B' }}
-                activeOpacity={0.85}
-              >
-                <View className="w-12 h-12 rounded-xl bg-accent items-center justify-center">
-                  <Text className="text-xl">⭐</Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-white font-bold text-base">Upgrade to Pro</Text>
-                  <Text className="text-white/60 text-sm mt-0.5">Unlock extended packs + the Pack Builder</Text>
-                </View>
-                <Ionicons name="arrow-forward" size={20} color="rgba(255,255,255,0.7)" />
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
+          );
+        })()}
       </ScrollView>
     </SafeAreaView>
   );

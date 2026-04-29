@@ -42,6 +42,7 @@ export interface CharacterPack {
   description?: string;
   share_code: string;
   creator_id?: string;
+  category_id?: string;
   is_system: boolean;
   requires_premium: boolean;
   character_ids: string[];

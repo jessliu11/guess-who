@@ -9,6 +9,7 @@ export default function Home() {
   const router = useRouter();
   const { profile } = useAuth();
 
+  // win rate is only calculated for users that are logged in
   const winRate = profile && profile.games_played > 0
     ? Math.round((profile.games_won / profile.games_played) * 100)
     : 0;
@@ -18,7 +19,6 @@ export default function Home() {
       <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className="pt-6 pb-2">
-          <Text className="text-gray-500 text-sm">Hey there 👋</Text>
           <Text className="text-navy text-3xl font-bold mt-0.5" style={{ fontFamily: 'Inter_700Bold' }}>Ready to play?</Text>
         </View>
 
@@ -81,18 +81,7 @@ export default function Home() {
           </View>
         )}
 
-        {/* Tip */}
-        <View className="rounded-2xl p-4 mb-8 flex-row items-start gap-3" style={{ backgroundColor: '#FEF3C7' }}>
-          <View className="w-9 h-9 rounded-xl bg-white/60 items-center justify-center mt-0.5">
-            <Ionicons name="call-outline" size={18} color="#92400E" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-amber-900 text-sm font-bold mb-0.5">Pro tip</Text>
-            <Text className="text-amber-800 text-sm leading-relaxed">
-              Hop on a call with your opponent while you play for the full experience.
-            </Text>
-          </View>
-        </View>
+        
       </ScrollView>
     </SafeAreaView>
   );
