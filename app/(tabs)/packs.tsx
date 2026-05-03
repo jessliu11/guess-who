@@ -25,7 +25,7 @@ function displayPackName(name: string) {
 function PackIcon({ pack }: { pack: CharacterPack }) {
   const imgUrl = pack.preview_image_urls?.[0];
   return (
-    <View className="w-11 h-11 rounded-xl overflow-hidden bg-gray-100 items-center justify-center mr-3">
+    <View className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 items-center justify-center mr-4">
       {imgUrl ? (
         <Image source={{ uri: imgUrl }} className="w-full h-full" resizeMode="cover" />
       ) : (
@@ -59,13 +59,13 @@ function PackRow({
       <TouchableOpacity
         onPress={onToggleExpand}
         activeOpacity={0.7}
-        className="px-4 py-4 flex-row items-center"
+        className="p-5 flex-row items-center"
       >
         <PackIcon pack={pack} />
 
         <View className="flex-1">
           <View className="flex-row items-center gap-2 flex-wrap">
-            <Text className={`font-semibold text-sm ${isLocked ? 'text-gray-400' : 'text-navy'}`}>
+            <Text className={`text-lg font-bold ${isLocked ? 'text-gray-400' : 'text-navy'}`}>
               {displayPackName(pack.name)}
             </Text>
             {showShareCode && pack.share_code && (
@@ -80,7 +80,7 @@ function PackRow({
               </View>
             )}
           </View>
-          <Text className="text-gray-400 text-xs mt-0.5">
+          <Text className="text-gray-400 text-sm mt-0.5">
             {pack.character_ids.length} characters
           </Text>
         </View>
@@ -263,43 +263,46 @@ export default function Packs() {
             )}
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-1">
-            <View className="flex-row px-1 gap-2">
-              {customCharacters.map((character) => (
-                <TouchableOpacity
-                  key={character.id}
-                  onLongPress={() => handleDeleteCustomCharacter(character)}
-                  activeOpacity={0.8}
-                  className="items-center"
-                >
-                  <View className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-200">
-                    <Image
-                      source={{ uri: character.image_url }}
-                      className="w-full h-full"
-                      resizeMode="cover"
-                    />
-                  </View>
-                  <Text className="text-navy text-xs mt-1 text-center max-w-[60px]" numberOfLines={1}>
+          <View className="flex-row flex-wrap">
+            {customCharacters.map((character) => (
+              <TouchableOpacity
+                key={character.id}
+                onLongPress={() => handleDeleteCustomCharacter(character)}
+                activeOpacity={0.8}
+                style={{ width: '23%', margin: '1%' }}
+                className="rounded-xl overflow-hidden"
+              >
+                <Image
+                  source={{ uri: character.image_url }}
+                  style={{ width: '100%', aspectRatio: 1 }}
+                  resizeMode="cover"
+                />
+                <View className="bg-gray-50 px-1 py-1">
+                  <Text className="text-navy text-[10px] text-center" numberOfLines={1}>
                     {character.name}
                   </Text>
-                </TouchableOpacity>
-              ))}
-
-              {/* Add new character */}
-              <TouchableOpacity
-                onPress={() => router.push('/(game)/character-creator' as any)}
-                activeOpacity={0.7}
-                className="items-center"
-              >
-                <View
-                  className="w-16 h-16 rounded-2xl items-center justify-center border-2 border-dashed border-gray-300"
-                >
-                  <Ionicons name="add" size={24} color="#9CA3AF" />
                 </View>
-                <Text className="text-gray-400 text-xs mt-1">Add</Text>
               </TouchableOpacity>
-            </View>
-          </ScrollView>
+            ))}
+
+            {/* Add new character */}
+            <TouchableOpacity
+              onPress={() => router.push('/(game)/character-creator' as any)}
+              activeOpacity={0.7}
+              style={{ width: '23%', margin: '1%' }}
+              className="rounded-xl overflow-hidden"
+            >
+              <View
+                style={{ aspectRatio: 1 }}
+                className="items-center justify-center border-2 border-dashed border-gray-300 rounded-xl"
+              >
+                <Ionicons name="add" size={24} color="#9CA3AF" />
+              </View>
+              <View className="bg-gray-50 px-1 py-1">
+                <Text className="text-gray-400 text-[10px] text-center">Add</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* My Packs */}
