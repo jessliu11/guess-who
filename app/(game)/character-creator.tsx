@@ -18,6 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { createCustomCharacter, getMyCustomCharacters } from '../../src/lib/characters';
+import { supabase } from '../../src/lib/supabase';
 import { FREE_CUSTOM_CHARACTER_LIMIT } from '../../src/constants/config';
 
 type QueueItem = { uri: string; name: string };
@@ -83,15 +84,36 @@ export default function CharacterCreator() {
   const handleSaveAll = async () => {
     if (!user) return;
     setSaving(true);
+    setProgress({ current: 0, total: queue.length });
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      Alert.alert('Session expired', 'Please sign in again.');
+      setSaving(false);
+      setProgress(null);
+      return;
+    }
+
     const failedIndices: number[] = [];
-    for (let i = 0; i < queue.length; i++) {
-      setProgress({ current: i + 1, total: queue.length });
-      try {
-        await createCustomCharacter(user.id, queue[i].name, queue[i].uri);
-      } catch {
-        failedIndices.push(i);
+    let completed = 0;
+    let nextIndex = 0;
+    const snapshot = [...queue];
+
+    async function worker() {
+      while (nextIndex < snapshot.length) {
+        const i = nextIndex++;
+        try {
+          await createCustomCharacter(user!.id, snapshot[i].name, snapshot[i].uri, session);
+        } catch {
+          failedIndices.push(i);
+        }
+        completed++;
+        setProgress({ current: completed, total: snapshot.length });
       }
     }
+
+    await Promise.all(Array.from({ length: Math.min(3, snapshot.length) }, worker));
+
     setSaving(false);
     setProgress(null);
     if (failedIndices.length > 0) {
@@ -215,7 +237,7 @@ export default function CharacterCreator() {
           <View>
             {saving && progress ? (
               <Text className="text-navy font-semibold text-base">
-                Saving {progress.current} of {progress.total}…
+                Saved {progress.current} of {progress.total}…
               </Text>
             ) : (
               <>

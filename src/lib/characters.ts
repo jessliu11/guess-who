@@ -1,4 +1,6 @@
+import * as ImageManipulator from 'expo-image-manipulator';
 import { supabase } from './supabase';
+import type { Session } from '@supabase/supabase-js';
 import type { Character } from '../types/game.types';
 
 function generateUUID(): string {
@@ -9,6 +11,15 @@ function generateUUID(): string {
   });
 }
 
+async function compressImage(uri: string): Promise<string> {
+  const result = await ImageManipulator.manipulateAsync(
+    uri,
+    [{ resize: { width: 800 } }],
+    { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+  );
+  return result.uri;
+}
+
 async function fetchImageBuffer(uri: string): Promise<ArrayBuffer> {
   // arraybuffer is reliably serialized by React Native's networking stack;
   // Blob responses can upload as 0 bytes when passed through the Supabase client.
@@ -17,6 +28,8 @@ async function fetchImageBuffer(uri: string): Promise<ArrayBuffer> {
     xhr.onload = () => resolve(xhr.response as ArrayBuffer);
     xhr.onerror = () => reject(new Error('Failed to read image file'));
     xhr.responseType = 'arraybuffer';
+    xhr.timeout = 30_000;
+    xhr.ontimeout = () => reject(new Error('Image read timed out'));
     xhr.open('GET', uri);
     xhr.send();
   });
@@ -37,26 +50,32 @@ export async function createCustomCharacter(
   userId: string,
   name: string,
   imageUri: string,
+  preloadedSession?: Session | null,
 ): Promise<Character> {
   const characterId = generateUUID();
   const storagePath = `custom/${userId}/${characterId}.jpg`;
 
-  // Explicitly load the session so the token is ready in memory before
-  // calling the storage client (avoids the AsyncStorage async-load race).
-  const { data: { session } } = await supabase.auth.getSession();
+  const session =
+    preloadedSession ??
+    // Explicitly load the session so the token is ready in memory before
+    // calling the storage client (avoids the AsyncStorage async-load race).
+    (await supabase.auth.getSession()).data.session;
   if (!session) throw new Error('Not authenticated. Please sign in again.');
 
-  const buffer = await fetchImageBuffer(imageUri);
+  const compressedUri = await compressImage(imageUri);
+  const buffer = await fetchImageBuffer(compressedUri);
 
-  // Now that the session is cached in memory, the storage client picks it up
-  // immediately — no race condition.
-  const { error: storageError } = await supabase.storage
-    .from('character-images')
-    .upload(storagePath, buffer, { contentType: 'image/jpeg', upsert: true });
-
-  if (storageError) {
-    throw new Error(storageError.message);
+  // Retry storage upload — safe because upsert:true makes repeated attempts idempotent.
+  let storageError: { message: string } | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { error } = await supabase.storage
+      .from('character-images')
+      .upload(storagePath, buffer, { contentType: 'image/jpeg', upsert: true });
+    if (!error) { storageError = null; break; }
+    storageError = error;
+    if (attempt < 2) await new Promise(r => setTimeout(r, 600 * (attempt + 1)));
   }
+  if (storageError) throw new Error(storageError.message);
 
   const { data: { publicUrl } } = supabase.storage
     .from('character-images')
