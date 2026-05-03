@@ -3,6 +3,9 @@ export const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''
 export const REVENUECAT_APPLE_KEY = process.env.EXPO_PUBLIC_REVENUECAT_APPLE_KEY ?? '';
 export const REVENUECAT_GOOGLE_KEY = process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY ?? '';
 
+// Set to true to bypass all premium gates during local testing (remove before shipping)
+export const DEV_UNLOCK_ALL_PACKS = true;
+
 export const PREMIUM_ENTITLEMENT_ID = 'premium';
 export const JOIN_CODE_LENGTH = 6;
 export const PACK_CODE_LENGTH = 6;
