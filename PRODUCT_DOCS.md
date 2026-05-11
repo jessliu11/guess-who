@@ -300,4 +300,98 @@ System-managed list of character categories (e.g., `celebrities`, `actors`, `sin
 
 ---
 
-*Last updated: April 2026*
+---
+
+## Development Environment
+
+### Overview
+
+Two development modes are available depending on the testing target:
+
+| Mode | Command | Device | Supabase |
+|---|---|---|---|
+| Simulator | `npx expo start` | iOS Simulator (press `i`) | Local CLI (`127.0.0.1:54331`) |
+| Physical device | `npx expo start --tunnel` | iPhone via Expo Go | Production |
+
+### Local Supabase CLI Setup
+
+The project runs a full local Supabase stack via Docker for Simulator-based development. This keeps the production database clean during active development.
+
+**Prerequisites:** Docker Desktop running, Supabase CLI installed (`brew install supabase/tap/supabase`)
+
+**Ports** (offset from defaults to avoid conflict with other local Supabase projects):
+
+| Service | Port |
+|---|---|
+| API / REST | 54331 |
+| Database | 54332 |
+| Studio | 54333 |
+| Inbucket (email) | 54334 |
+| Analytics | 54337 |
+
+**Local Studio:** [http://127.0.0.1:54333](http://127.0.0.1:54333)
+
+### Environment Files
+
+| File | Loaded when | Supabase target |
+|---|---|---|
+| `.env.development.local` | `npx expo start` (dev mode) | Local CLI |
+| `.env.local` | Always (prod fallback) | Production |
+| `.env` | Always (base) | Production |
+
+`.env.development.local` overrides `.env.local` in development mode. Both files are gitignored.
+
+### Daily Commands
+
+```bash
+# Start local dev stack
+supabase start
+
+# Stop local dev stack
+supabase stop
+
+# Reset local DB (re-runs all migrations + seeds)
+supabase db reset
+
+# Push a new migration to production
+supabase db push
+
+# Create a new migration file
+supabase migration new <name>
+
+# Check local service URLs and keys
+supabase status
+```
+
+### Seed Data
+
+The local database is seeded automatically on `supabase db reset` via two files in `supabase/seeds/`:
+
+| File | Contents |
+|---|---|
+| `characters.sql` | 192 system characters (160 standard, 32 extended), sourced from prod |
+| `pack_links.sql` | `character_ids` arrays linking each of the 16 system packs to their characters |
+
+Character image URLs in the seed point to the production Storage bucket and load correctly in both environments (bucket is public).
+
+To re-sync seed data from production (e.g. after new characters are added to prod):
+
+```bash
+# Re-export characters from prod and apply locally
+supabase db reset
+```
+
+Or manually re-run the export and apply:
+```bash
+# Fetch updated characters from prod REST API → regenerate seeds → apply to local DB
+docker exec -i supabase_db_guess-who psql -U postgres < supabase/seeds/characters.sql
+docker exec -i supabase_db_guess-who psql -U postgres < supabase/seeds/pack_links.sql
+```
+
+### Physical Device Notes
+
+`npx expo start --tunnel` routes the JS bundle through ngrok (requires `@expo/ngrok` dev dependency, already installed). The device connects to production Supabase directly — no local stack involved.
+
+`127.0.0.1` is unreachable from a physical device; the Simulator works because it shares the Mac's loopback interface. Multiple active VPN tunnels (`utun` interfaces) prevent reliable LAN routing to local services on physical devices in this environment.
+
+*Last updated: May 2026*
