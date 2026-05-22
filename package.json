@@ -6,6 +6,7 @@
     "start": "expo start",
     "start:simulator": "expo start --ios",
     "start:device": "bash scripts/start-device.sh",
+    "start:device:lan": "bash scripts/start-device-lan.sh",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
