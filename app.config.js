@@ -1,6 +1,6 @@
 export default ({ config }) => ({
   ...config,
-  name: 'Who What Where',
+  name: 'Who, What, Where?',
   slug: 'guess-who-app',
   version: '1.0.0',
   orientation: 'portrait',
@@ -15,14 +15,14 @@ export default ({ config }) => ({
   },
   ios: {
     supportsTablet: false,
-    bundleIdentifier: 'com.guesswho.app',
+    bundleIdentifier: 'com.whowhatwhere.app',
     infoPlist: {
       NSCameraUsageDescription: 'Used to take character and profile photos.',
       NSPhotoLibraryUsageDescription: 'Used to pick photos for custom characters.',
     },
   },
   android: {
-    package: 'com.guesswho.app',
+    package: 'com.whowhatwhere.app',
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#0F172A',
@@ -71,7 +71,7 @@ export default ({ config }) => ({
     revenueCatAppleKey: process.env.EXPO_PUBLIC_REVENUECAT_APPLE_KEY,
     revenueCatGoogleKey: process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY,
     eas: {
-      projectId: process.env.EAS_PROJECT_ID,
+      projectId: '063162b6-2bcb-4868-81f0-6369028dc5d2',
     },
   },
 });

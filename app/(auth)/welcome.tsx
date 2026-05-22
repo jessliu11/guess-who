@@ -54,7 +54,7 @@ export default function Welcome() {
             <Text className="text-white text-4xl font-bold">?</Text>
           </View>
 
-          <Text className="text-white text-5xl font-bold text-center" style={{ fontFamily: 'Inter_700Bold' }}>Who What Where</Text>
+          <Text className="text-white text-5xl font-bold text-center" style={{ fontFamily: 'Inter_700Bold' }}>Who, What, Where?</Text>
           <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16, textAlign: 'center', maxWidth: 280, lineHeight: 24 }}>
             The classic guessing game, reimagined. Play with friends using any characters you can dream up.
           </Text>
