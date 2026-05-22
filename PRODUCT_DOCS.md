@@ -1,8 +1,8 @@
-# Guess Who — Product Documentation
+# Who What Where — Product Documentation
 
 ## Overview
 
-Guess Who is a mobile-first multiplayer deduction game, a digital reimagining of the classic board game. Two players compete head-to-head, taking turns asking yes/no questions to identify their opponent's secret character from a shared board. The game supports custom character packs, real-time multiplayer, and a free/pro subscription model.
+Who What Where is a mobile-first multiplayer deduction game, a digital reimagining of the classic board game. Two players compete head-to-head, taking turns asking yes/no questions to identify their opponent's secret character from a shared board. The game supports custom character packs, real-time multiplayer, and a free/pro subscription model.
 
 **Platform:** iOS & Android (React Native / Expo)  
 **Backend:** Supabase (PostgreSQL, Auth, Realtime, Storage)  

@@ -13,7 +13,7 @@ export function JoinCodeDisplay({ code, label = 'Game Code' }: JoinCodeDisplayPr
   };
 
   const handleShare = async () => {
-    await Share.share({ message: `Join my Guess Who game! Code: ${code}` });
+    await Share.share({ message: `Join my Who What Where game! Code: ${code}` });
   };
 
   const chars = code.split('');

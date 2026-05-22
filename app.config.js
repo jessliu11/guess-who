@@ -1,6 +1,6 @@
 export default ({ config }) => ({
   ...config,
-  name: 'Guess Who',
+  name: 'Who What Where',
   slug: 'guess-who-app',
   version: '1.0.0',
   orientation: 'portrait',

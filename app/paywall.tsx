@@ -51,7 +51,7 @@ export default function Paywall() {
           <View className="w-16 h-16 rounded-2xl bg-accent items-center justify-center mb-4">
             <Text className="text-3xl">⭐</Text>
           </View>
-          <Text className="text-white text-3xl font-bold text-center">Guess Who Pro</Text>
+          <Text className="text-white text-3xl font-bold text-center">Who What Where Pro</Text>
           <Text className="text-white/75 text-sm text-center mt-2 max-w-xs">
             Unlock the full experience with custom packs and the extended character pool
           </Text>
