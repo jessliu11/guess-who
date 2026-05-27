@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 14.0.0"
+    "version": ">= 14.0.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
@@ -11,7 +12,6 @@
       }
     },
     "preview": {
-      "distribution": "internal",
       "env": {
         "APP_ENV": "preview"
       }
@@ -26,9 +26,9 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "your@apple.com",
-        "ascAppId": "your_asc_app_id",
-        "appleTeamId": "your_team_id"
+        "appleId": "jmliu0211@gmail.com",
+        "ascAppId": "6772218355",
+        "appleTeamId": "ST9ZFF7SM8"
       },
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",
