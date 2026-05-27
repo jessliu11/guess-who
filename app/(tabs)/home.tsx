@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/hooks/useAuth';
 
 export default function Home() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { profile } = useAuth();
 
@@ -15,7 +16,7 @@ export default function Home() {
     : 0;
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <View style={{ flex: 1, paddingTop: insets.top }} className="bg-background">
       <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className="pt-6 pb-2">
@@ -83,6 +84,6 @@ export default function Home() {
 
         
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { createCustomCharacter, getMyCustomCharacters } from '../../src/lib/characters';
@@ -22,6 +23,15 @@ import { supabase } from '../../src/lib/supabase';
 import { FREE_CUSTOM_CHARACTER_LIMIT } from '../../src/constants/config';
 
 type QueueItem = { uri: string; name: string };
+
+async function compressImage(uri: string): Promise<string> {
+  const result = await ImageManipulator.manipulateAsync(
+    uri,
+    [{ resize: { width: 800 } }],
+    { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+  );
+  return result.uri;
+}
 
 export default function CharacterCreator() {
   const router = useRouter();
@@ -103,7 +113,8 @@ export default function CharacterCreator() {
       while (nextIndex < snapshot.length) {
         const i = nextIndex++;
         try {
-          await createCustomCharacter(user!.id, snapshot[i].name, snapshot[i].uri, session);
+          const compressedUri = await compressImage(snapshot[i].uri);
+          await createCustomCharacter(user!.id, snapshot[i].name, compressedUri, session);
         } catch {
           failedIndices.push(i);
         }

@@ -1,4 +1,3 @@
-import * as ImageManipulator from 'expo-image-manipulator';
 import { supabase } from './supabase';
 import type { Session } from '@supabase/supabase-js';
 import type { Character } from '../types/game.types';
@@ -9,15 +8,6 @@ function generateUUID(): string {
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
-}
-
-async function compressImage(uri: string): Promise<string> {
-  const result = await ImageManipulator.manipulateAsync(
-    uri,
-    [{ resize: { width: 800 } }],
-    { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
-  );
-  return result.uri;
 }
 
 async function fetchImageBuffer(uri: string): Promise<ArrayBuffer> {
@@ -62,8 +52,7 @@ export async function createCustomCharacter(
     (await supabase.auth.getSession()).data.session;
   if (!session) throw new Error('Not authenticated. Please sign in again.');
 
-  const compressedUri = await compressImage(imageUri);
-  const buffer = await fetchImageBuffer(compressedUri);
+  const buffer = await fetchImageBuffer(imageUri);
 
   // Retry storage upload — safe because upsert:true makes repeated attempts idempotent.
   let storageError: { message: string } | null = null;

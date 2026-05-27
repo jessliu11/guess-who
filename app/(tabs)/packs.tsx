@@ -8,7 +8,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSubscription } from '../../src/hooks/useSubscription';
@@ -139,6 +139,7 @@ function PackRow({
 }
 
 export default function Packs() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isPremium } = useSubscription();
   const { user } = useAuth();
@@ -229,15 +230,15 @@ export default function Packs() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+      <View style={{ flex: 1, paddingTop: insets.top }} className="bg-background items-center justify-center">
         <ActivityIndicator color="#7C3AED" />
-      </SafeAreaView>
+      </View>
     );
   }
 
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <View style={{ flex: 1, paddingTop: insets.top }} className="bg-background">
       <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className="pt-6 pb-4 flex-row items-end justify-between">
@@ -387,6 +388,6 @@ export default function Packs() {
           );
         })()}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
