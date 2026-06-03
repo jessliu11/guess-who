@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
 import { useEffect } from 'react';
+import { roundFromTurnCount } from '../../lib/round';
 
 interface TurnIndicatorProps {
   isMyTurn: boolean;
@@ -32,7 +33,7 @@ export function TurnIndicator({ isMyTurn, turnCount }: TurnIndicatorProps) {
           {isMyTurn ? 'Your Turn' : "Opponent's Turn"}
         </Text>
       </View>
-      <Text className="text-gray-400 text-xs">Round {turnCount + 1}</Text>
+      <Text className="text-gray-400 text-xs">Round {roundFromTurnCount(turnCount)}</Text>
     </View>
   );
 }

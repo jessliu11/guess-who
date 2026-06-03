@@ -35,6 +35,7 @@ export default function Board() {
     isMyTurn,
     setSession,
     setCharacters,
+    seedMyEliminated,
     eliminateLocally,
     clearGame,
   } = useGameStore();
@@ -55,6 +56,7 @@ export default function Board() {
       const s = await getSessionById(sessionId);
       if (!s) return;
       setSession(s);
+      seedMyEliminated(s);
       const chars = await getCharactersByIds(s.character_pool);
       chars.sort(
         (a, b) => s.character_pool.indexOf(a.id) - s.character_pool.indexOf(b.id),
@@ -82,7 +84,7 @@ export default function Board() {
     if (!sessionId || !myRole) return;
     setEndingTurn(true);
     try {
-      await endTurn(sessionId, myRole, myEliminated);
+      await endTurn(sessionId, myRole, myEliminated, session?.turn_count ?? 0);
     } catch (e: any) {
       Alert.alert('Error', e.message);
     } finally {
