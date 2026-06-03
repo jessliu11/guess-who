@@ -64,6 +64,22 @@ describe('syncFromServer', () => {
   });
 });
 
+describe('syncFromServer with abandoned status', () => {
+  it('reflects the abandoned status in the store so screens can react', () => {
+    useGameStore.getState().syncFromServer(makeSession({ status: 'active' }));
+    expect(useGameStore.getState().session?.status).toBe('active');
+
+    useGameStore.getState().syncFromServer(makeSession({ status: 'abandoned' }));
+    expect(useGameStore.getState().session?.status).toBe('abandoned');
+  });
+
+  it('preserves local eliminations when the session is abandoned', () => {
+    useGameStore.setState({ myRole: 'host', myEliminated: ['a', 'b'] });
+    useGameStore.getState().syncFromServer(makeSession({ status: 'abandoned' }));
+    expect(useGameStore.getState().myEliminated).toEqual(['a', 'b']);
+  });
+});
+
 describe('seedMyEliminated', () => {
   it('seeds from host_eliminated when role is host', () => {
     useGameStore.getState().setMyRole('host');
