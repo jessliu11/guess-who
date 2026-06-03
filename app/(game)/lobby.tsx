@@ -128,7 +128,7 @@ export default function Lobby() {
         ) : (
           <View className="items-center gap-3">
             <Text className="text-4xl mb-2">✅</Text>
-            <Text className="text-navy text-xl font-bold">You're In!</Text>
+            <Text className="text-navy text-xl font-bold">You&apos;re In!</Text>
             <View className="flex-row items-center gap-3">
               <Animated.View style={dotStyle} className="w-3 h-3 rounded-full bg-amber-400" />
               <Text className="text-gray-500 text-sm">Waiting for host to start…</Text>

@@ -86,7 +86,7 @@ export default function SignIn() {
             />
 
             <View className="flex-row justify-center gap-1 mt-2">
-              <Text className="text-gray-500 text-sm">Don't have an account?</Text>
+              <Text className="text-gray-500 text-sm">Don&apos;t have an account?</Text>
               <Text
                 className="text-primary-600 text-sm font-semibold"
                 onPress={() => router.replace('/(auth)/sign-up')}
