@@ -20,6 +20,7 @@ export default function Welcome() {
           .select('image_url')
           .eq('is_active', true)
           .eq('tier', 'standard')
+          .not('image_url', 'is', null)
           .limit(4);
         if (data && data.length > 0) {
           setAvatarUrls(data.map((c: { image_url: string }) => c.image_url));

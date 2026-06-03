@@ -13,6 +13,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { CharacterGrid } from '../../src/components/game/CharacterGrid';
+import { CharacterImage } from '../../src/components/game/CharacterImage';
 import { TurnIndicator } from '../../src/components/game/TurnIndicator';
 import { WinModal } from '../../src/components/game/WinModal';
 import { Button } from '../../src/components/ui/Button';
@@ -126,11 +127,12 @@ export default function Board() {
           {myCharacter && (
             <View className="flex-row items-center gap-3 bg-white rounded-2xl p-3 border border-gray-200 mb-3">
               <View className="relative">
-                <Image
-                  source={{ uri: myCharacter.image_url }}
+                <CharacterImage
+                  name={myCharacter.name}
+                  imageUrl={myCharacter.image_url}
                   className="w-14 h-14 rounded-xl"
                   blurRadius={8}
-                  resizeMode="cover"
+                  initialsFontSize={22}
                 />
                 <View className="absolute inset-0 rounded-xl bg-black/40 items-center justify-center">
                   <Text className="text-white text-xs">🤫</Text>

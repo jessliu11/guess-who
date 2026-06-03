@@ -39,7 +39,7 @@ export async function getMyCustomCharacters(userId: string): Promise<Character[]
 export async function createCustomCharacter(
   userId: string,
   name: string,
-  imageUri: string,
+  imageUri: string | null,
   preloadedSession?: Session | null,
 ): Promise<Character> {
   const characterId = generateUUID();
@@ -52,23 +52,29 @@ export async function createCustomCharacter(
     (await supabase.auth.getSession()).data.session;
   if (!session) throw new Error('Not authenticated. Please sign in again.');
 
-  const buffer = await fetchImageBuffer(imageUri);
+  let imageUrl: string | null = null;
+  let uploadedStoragePath: string | null = null;
 
-  // Retry storage upload — safe because upsert:true makes repeated attempts idempotent.
-  let storageError: { message: string } | null = null;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const { error } = await supabase.storage
+  if (imageUri) {
+    const buffer = await fetchImageBuffer(imageUri);
+
+    // Retry storage upload — safe because upsert:true makes repeated attempts idempotent.
+    let storageError: { message: string } | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { error } = await supabase.storage
+        .from('character-images')
+        .upload(storagePath, buffer, { contentType: 'image/jpeg', upsert: true });
+      if (!error) { storageError = null; break; }
+      storageError = error;
+      if (attempt < 2) await new Promise(r => setTimeout(r, 600 * (attempt + 1)));
+    }
+    if (storageError) throw new Error(storageError.message);
+
+    uploadedStoragePath = storagePath;
+    imageUrl = supabase.storage
       .from('character-images')
-      .upload(storagePath, buffer, { contentType: 'image/jpeg', upsert: true });
-    if (!error) { storageError = null; break; }
-    storageError = error;
-    if (attempt < 2) await new Promise(r => setTimeout(r, 600 * (attempt + 1)));
+      .getPublicUrl(storagePath).data.publicUrl;
   }
-  if (storageError) throw new Error(storageError.message);
-
-  const { data: { publicUrl } } = supabase.storage
-    .from('character-images')
-    .getPublicUrl(storagePath);
 
   // Insert character row
   const { data, error } = await supabase
@@ -78,7 +84,7 @@ export async function createCustomCharacter(
       category_id: 'custom',
       creator_id: userId,
       name: name.trim(),
-      image_url: publicUrl,
+      image_url: imageUrl,
       tier: 'standard',
       is_active: true,
       sort_order: 0,
@@ -96,8 +102,9 @@ export async function createCustomCharacter(
     .single();
 
   if (error) {
-    // Clean up orphaned storage file on DB failure
-    await supabase.storage.from('character-images').remove([storagePath]);
+    if (uploadedStoragePath) {
+      await supabase.storage.from('character-images').remove([uploadedStoragePath]);
+    }
     throw new Error(error.message);
   }
 

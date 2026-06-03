@@ -16,6 +16,7 @@ import { useAuth } from '../../src/hooks/useAuth';
 import { FREE_CATEGORY_IDS } from '../../src/constants/config';
 import { getSystemPacks, getMyPacks, deletePack, getCharactersByIds } from '../../src/lib/packs';
 import { getMyCustomCharacters, deleteCustomCharacter } from '../../src/lib/characters';
+import { CharacterImage } from '../../src/components/game/CharacterImage';
 import type { CharacterPack, Character } from '../../src/types/game.types';
 
 function displayPackName(name: string) {
@@ -118,10 +119,11 @@ function PackRow({
                   style={{ width: '23%', margin: '1%' }}
                   className="rounded-xl overflow-hidden"
                 >
-                  <Image
-                    source={{ uri: character.image_url }}
+                  <CharacterImage
+                    name={character.name}
+                    imageUrl={character.image_url}
                     style={{ width: '100%', aspectRatio: 1 }}
-                    resizeMode="cover"
+                    initialsFontSize={22}
                   />
                   <View className="bg-gray-50 px-1 py-1">
                     <Text className="text-navy text-[10px] text-center" numberOfLines={1}>
@@ -273,10 +275,11 @@ export default function Packs() {
                 style={{ width: '23%', margin: '1%' }}
                 className="rounded-xl overflow-hidden"
               >
-                <Image
-                  source={{ uri: character.image_url }}
+                <CharacterImage
+                  name={character.name}
+                  imageUrl={character.image_url}
                   style={{ width: '100%', aspectRatio: 1 }}
-                  resizeMode="cover"
+                  initialsFontSize={22}
                 />
                 <View className="bg-gray-50 px-1 py-1">
                   <Text className="text-navy text-[10px] text-center" numberOfLines={1}>

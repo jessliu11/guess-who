@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, View, Text, Image } from 'react-native';
 import type { Character } from '../../types/game.types';
+import { getInitials, getColorForName } from '../../lib/avatar';
 
 interface CharacterCardProps {
   character: Character;
@@ -41,11 +42,22 @@ export function CharacterCard({
       style={borderStyle}
     >
       <View className={`bg-white ${eliminated ? 'opacity-30' : ''}`}>
-        <Image
-          source={{ uri: character.image_url }}
-          className={`w-full ${imgH}`}
-          resizeMode="cover"
-        />
+        {character.image_url ? (
+          <Image
+            source={{ uri: character.image_url }}
+            className={`w-full ${imgH}`}
+            resizeMode="cover"
+          />
+        ) : (
+          <View
+            className={`w-full ${imgH} items-center justify-center`}
+            style={{ backgroundColor: getColorForName(character.name) }}
+          >
+            <Text className="text-white font-bold" style={{ fontSize: size === 'sm' ? 22 : 28 }}>
+              {getInitials(character.name)}
+            </Text>
+          </View>
+        )}
         {eliminated && (
           <View className="absolute inset-0 items-center justify-center">
             <Text className="text-gray-600 text-2xl font-bold">✕</Text>

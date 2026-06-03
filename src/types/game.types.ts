@@ -29,7 +29,7 @@ export interface Character {
   category_id: string;
   creator_id?: string;
   name: string;
-  image_url: string;
+  image_url: string | null;
   tier: 'standard' | 'extended';
   attributes: CharacterAttributes;
   is_active: boolean;

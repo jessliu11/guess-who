@@ -76,9 +76,9 @@ export default function PackBuilder() {
     try {
       const ids = Array.from(selectedIds);
       const previewUrls = allChars
-        .filter((c) => ids.includes(c.id))
+        .filter((c) => ids.includes(c.id) && c.image_url)
         .slice(0, 4)
-        .map((c) => c.image_url);
+        .map((c) => c.image_url as string);
       const pack = await createPack(user.id, packName.trim(), ids, previewUrls);
       Alert.alert(
         'Pack Created!',
