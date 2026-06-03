@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '../../src/components/layout/ScreenHeader';
 import { CharacterCard } from '../../src/components/game/CharacterCard';
 import { CharacterImage } from '../../src/components/game/CharacterImage';
+import { OpponentLeftModal } from '../../src/components/game/OpponentLeftModal';
 import { Button } from '../../src/components/ui/Button';
 import { getCharactersByIds } from '../../src/lib/packs';
 import { setCharacter, getSessionById } from '../../src/lib/session';
@@ -23,13 +24,14 @@ import type { Character, GameSession } from '../../src/types/game.types';
 export default function CharacterSelect() {
   const router = useRouter();
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
-  const { myRole, session, setSession, setCharacters } = useGameStore();
+  const { myRole, session, setSession, setCharacters, clearGame } = useGameStore();
 
   const [characters, setLocalChars] = useState<Character[]>([]);
   const [selected, setSelected] = useState<Character | null>(null);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [opponentLeftVisible, setOpponentLeftVisible] = useState(false);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -67,6 +69,8 @@ export default function CharacterSelect() {
           if (updated.status === 'active') {
             supabase.removeChannel(channel);
             goToBoard();
+          } else if (updated.status === 'abandoned') {
+            setOpponentLeftVisible(true);
           }
         },
       )
@@ -80,6 +84,8 @@ export default function CharacterSelect() {
         clearInterval(poll);
         supabase.removeChannel(channel);
         goToBoard();
+      } else if (s?.status === 'abandoned') {
+        setOpponentLeftVisible(true);
       }
     }, 3000);
 
@@ -182,6 +188,16 @@ export default function CharacterSelect() {
           </View>
         </View>
       </Modal>
+
+      {/* Opponent Left Modal */}
+      <OpponentLeftModal
+        visible={opponentLeftVisible}
+        onHome={() => {
+          setOpponentLeftVisible(false);
+          clearGame();
+          router.replace('/(tabs)/home');
+        }}
+      />
     </SafeAreaView>
   );
 }

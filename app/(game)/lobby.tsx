@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -11,6 +11,7 @@ import Animated, {
 import { ScreenHeader } from '../../src/components/layout/ScreenHeader';
 import { JoinCodeDisplay } from '../../src/components/ui/JoinCodeDisplay';
 import { Button } from '../../src/components/ui/Button';
+import { ConfirmModal } from '../../src/components/ui/ConfirmModal';
 import { getSessionById, abandonSession } from '../../src/lib/session';
 import { useGameStore } from '../../src/store/gameStore';
 import { supabase } from '../../src/lib/supabase';
@@ -24,6 +25,8 @@ export default function Lobby() {
 
   const [session, setLocalSession] = useState<GameSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirmLeaveVisible, setConfirmLeaveVisible] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const dotScale = useSharedValue(1);
   const dotStyle = useAnimatedStyle(() => ({ transform: [{ scale: dotScale.value }] }));
@@ -93,10 +96,16 @@ export default function Lobby() {
     };
   }, [sessionId]);
 
-  const handleCancel = async () => {
+  const handleConfirmLeave = async () => {
     if (!sessionId) return;
-    await abandonSession(sessionId);
-    router.replace('/(tabs)/home');
+    setLeaving(true);
+    try {
+      await abandonSession(sessionId);
+      setConfirmLeaveVisible(false);
+      router.replace('/(tabs)/home');
+    } finally {
+      setLeaving(false);
+    }
   };
 
   if (loading || !session) {
@@ -136,8 +145,19 @@ export default function Lobby() {
           </View>
         )}
 
-        <Button title="Leave Game" variant="ghost" onPress={handleCancel} />
+        <Button title="Leave Game" variant="ghost" onPress={() => setConfirmLeaveVisible(true)} />
       </View>
+
+      <ConfirmModal
+        visible={confirmLeaveVisible}
+        title="Leave Game?"
+        message="Are you sure you want to leave the lobby?"
+        confirmLabel="Leave Game"
+        destructive
+        loading={leaving}
+        onConfirm={handleConfirmLeave}
+        onCancel={() => setConfirmLeaveVisible(false)}
+      />
     </SafeAreaView>
   );
 }

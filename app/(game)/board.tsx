@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -16,11 +16,13 @@ import { CharacterGrid } from '../../src/components/game/CharacterGrid';
 import { CharacterImage } from '../../src/components/game/CharacterImage';
 import { TurnIndicator } from '../../src/components/game/TurnIndicator';
 import { WinModal } from '../../src/components/game/WinModal';
+import { OpponentLeftModal } from '../../src/components/game/OpponentLeftModal';
 import { Button } from '../../src/components/ui/Button';
+import { ConfirmModal } from '../../src/components/ui/ConfirmModal';
 import { useGameStore } from '../../src/store/gameStore';
 import { useRealtimeGame } from '../../src/hooks/useRealtimeGame';
 import { getCharactersByIds } from '../../src/lib/packs';
-import { getSessionById, endTurn, submitGuess } from '../../src/lib/session';
+import { getSessionById, endTurn, submitGuess, abandonSession } from '../../src/lib/session';
 import type { Character, GameSession } from '../../src/types/game.types';
 
 export default function Board() {
@@ -46,6 +48,10 @@ export default function Board() {
   const [guessSelected, setGuessSelected] = useState<Character | null>(null);
   const [submittingGuess, setSubmittingGuess] = useState(false);
   const [winVisible, setWinVisible] = useState(false);
+  const [confirmLeaveVisible, setConfirmLeaveVisible] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [opponentLeftVisible, setOpponentLeftVisible] = useState(false);
+  const leftByMe = useRef(false);
 
   // Attach realtime
   useRealtimeGame(sessionId ?? null);
@@ -67,10 +73,12 @@ export default function Board() {
     init();
   }, [sessionId]);
 
-  // Show win modal when game finishes
+  // Show win modal when game finishes, or opponent-left modal when abandoned by other player
   useEffect(() => {
     if (session?.status === 'finished') {
       setWinVisible(true);
+    } else if (session?.status === 'abandoned' && !leftByMe.current) {
+      setOpponentLeftVisible(true);
     }
   }, [session?.status]);
 
@@ -89,6 +97,23 @@ export default function Board() {
       Alert.alert('Error', e.message);
     } finally {
       setEndingTurn(false);
+    }
+  };
+
+  const handleConfirmLeave = async () => {
+    if (!sessionId) return;
+    setLeaving(true);
+    leftByMe.current = true;
+    try {
+      await abandonSession(sessionId);
+      setConfirmLeaveVisible(false);
+      clearGame();
+      router.replace('/(tabs)/home');
+    } catch (e: any) {
+      leftByMe.current = false;
+      Alert.alert('Error', e.message);
+    } finally {
+      setLeaving(false);
     }
   };
 
@@ -123,9 +148,17 @@ export default function Board() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      <View className="px-4 pt-2 flex-row justify-end">
+        <Button
+          title="Leave Game"
+          variant="danger"
+          size="sm"
+          onPress={() => setConfirmLeaveVisible(true)}
+        />
+      </View>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* My secret character */}
-        <View className="px-4 pt-3 pb-2">
+        <View className="px-4 pt-2 pb-2">
           {myCharacter && (
             <View className="flex-row items-center gap-3 bg-white rounded-2xl p-3 border border-gray-200 mb-3">
               <View className="relative">
@@ -229,6 +262,28 @@ export default function Board() {
           router.replace('/(game)/setup?mode=host');
         }}
         onHome={() => {
+          clearGame();
+          router.replace('/(tabs)/home');
+        }}
+      />
+
+      {/* Confirm Leave Modal */}
+      <ConfirmModal
+        visible={confirmLeaveVisible}
+        title="Leave Game?"
+        message="If you leave now, the game will end for both players. This cannot be undone."
+        confirmLabel="Leave Game"
+        destructive
+        loading={leaving}
+        onConfirm={handleConfirmLeave}
+        onCancel={() => setConfirmLeaveVisible(false)}
+      />
+
+      {/* Opponent Left Modal */}
+      <OpponentLeftModal
+        visible={opponentLeftVisible}
+        onHome={() => {
+          setOpponentLeftVisible(false);
           clearGame();
           router.replace('/(tabs)/home');
         }}
