@@ -24,7 +24,7 @@ import { useGameStore } from '../../src/store/gameStore';
 import type { CharacterPack, Character } from '../../src/types/game.types';
 
 const MIN_CHARACTERS = 4;
-const BOARD_SIZE_PRESETS = [4, 9, 12, 16, 24, 32, 36];
+const MAX_BOARD_SIZE = 24;
 
 function displayPackName(name: string) {
   return name.replace(/\s*[-–—]+\s*(Standard|Extended)\s*$/i, '').trim();
@@ -194,7 +194,6 @@ export default function Setup() {
   const [packCharacters, setPackCharacters] = useState<Record<string, Character[]>>({});
   const [loadingCharacters, setLoadingCharacters] = useState<Record<string, boolean>>({});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [boardSize, setBoardSize] = useState(9);
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingPacks, setLoadingPacks] = useState(isHost);
@@ -281,7 +280,8 @@ export default function Setup() {
     if (!user || selectedIds.size < MIN_CHARACTERS) return;
     setLoading(true);
     try {
-      const session = await createSession(user.id, null, Array.from(selectedIds), boardSize);
+      const finalBoardSize = Math.min(selectedIds.size, MAX_BOARD_SIZE);
+      const session = await createSession(user.id, null, Array.from(selectedIds), finalBoardSize);
       useGameStore.getState().setMyRole('host');
       router.push(`/(game)/lobby?sessionId=${session.id}`);
     } catch (e: any) {
@@ -459,44 +459,15 @@ export default function Setup() {
 
         {/* Sticky footer */}
         <View className="bg-background border-t border-gray-200 px-4 pt-3 pb-4">
-          {/* Board size presets */}
-          <View className="mb-3">
-            <Text className="text-gray-500 text-xs mb-2">Board size</Text>
-            <View className="flex-row flex-wrap gap-2">
-              {BOARD_SIZE_PRESETS.map((size) => {
-                const isAvailable = size <= selectedCount;
-                const isActive = boardSize === size;
-                return (
-                  <TouchableOpacity
-                    key={size}
-                    onPress={() => { if (isAvailable) setBoardSize(size); }}
-                    disabled={!isAvailable}
-                    className="w-10 h-10 rounded-2xl items-center justify-center"
-                    style={{
-                      backgroundColor: isActive ? '#7C3AED' : isAvailable ? '#F0EDE8' : '#F5F3F0',
-                    }}
-                  >
-                    <Text
-                      className="text-sm font-semibold"
-                      style={{ color: isActive ? 'white' : isAvailable ? '#1E1B4B' : '#C4C0BA' }}
-                    >
-                      {size}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
           <View className="flex-row items-center justify-between">
             <View>
               <Text className="text-navy font-bold text-base">{selectedCount} selected</Text>
               <Text className="text-gray-400 text-xs">
-                {canStart
-                  ? boardSize < selectedCount
-                    ? `${boardSize} will be drawn from your ${selectedCount}`
-                    : 'Ready to go!'
-                  : `Min ${MIN_CHARACTERS} to play`}
+                {!canStart
+                  ? `Min ${MIN_CHARACTERS} to play`
+                  : selectedCount > MAX_BOARD_SIZE
+                    ? `${MAX_BOARD_SIZE} will be randomly drawn from your ${selectedCount}`
+                    : 'Ready to go!'}
               </Text>
             </View>
             <TouchableOpacity
