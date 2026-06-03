@@ -41,13 +41,13 @@ export default function Welcome() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <LinearGradient
-        colors={['#7C3AED', '#C026D3']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ flex: 1, paddingHorizontal: 24, paddingBottom: 48, paddingTop: 64, justifyContent: 'space-between' }}
-      >
+    <LinearGradient
+      colors={['#7C3AED', '#C026D3']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={{ flex: 1, paddingHorizontal: 24, paddingBottom: 24, paddingTop: 16, justifyContent: 'space-between' }}>
         {/* Hero */}
         <View style={{ alignItems: 'center', flex: 1, justifyContent: 'center', gap: 20 }}>
           {/* App icon */}
@@ -110,7 +110,7 @@ export default function Welcome() {
             </Text>
           </TouchableOpacity>
         </View>
-      </LinearGradient>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
