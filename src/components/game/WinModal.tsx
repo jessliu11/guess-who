@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, Modal, Image } from 'react-native';
+import { View, Text, Modal } from 'react-native';
 import { Button } from '../ui/Button';
+import { CharacterImage } from './CharacterImage';
 import type { Character, PlayerRole } from '../../types/game.types';
 
 interface WinModalProps {
@@ -39,10 +40,11 @@ export function WinModal({
               <Text className="text-gray-400 text-xs mb-2 uppercase tracking-wider">
                 Opponent was
               </Text>
-              <Image
-                source={{ uri: opponentCharacter.image_url }}
+              <CharacterImage
+                name={opponentCharacter.name}
+                imageUrl={opponentCharacter.image_url}
                 className="w-24 h-24 rounded-2xl mb-2"
-                resizeMode="cover"
+                initialsFontSize={36}
               />
               <Text className="text-navy font-semibold text-base">
                 {opponentCharacter.name}

@@ -12,6 +12,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '../../src/components/layout/ScreenHeader';
 import { CharacterCard } from '../../src/components/game/CharacterCard';
+import { CharacterImage } from '../../src/components/game/CharacterImage';
 import { Button } from '../../src/components/ui/Button';
 import { getCharactersByIds } from '../../src/lib/packs';
 import { setCharacter, getSessionById } from '../../src/lib/session';
@@ -158,10 +159,11 @@ export default function CharacterSelect() {
             <Text className="text-navy text-lg font-bold mb-2">Confirm Character</Text>
             {selected && (
               <>
-                <Image
-                  source={{ uri: selected.image_url }}
+                <CharacterImage
+                  name={selected.name}
+                  imageUrl={selected.image_url}
                   className="w-28 h-28 rounded-2xl my-3"
-                  resizeMode="cover"
+                  initialsFontSize={42}
                 />
                 <Text className="text-navy font-semibold text-base mb-1">{selected.name}</Text>
                 <Text className="text-gray-500 text-xs text-center mb-5">

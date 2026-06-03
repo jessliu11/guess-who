@@ -20,9 +20,10 @@ import { useAuth } from '../../src/hooks/useAuth';
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { createCustomCharacter, getMyCustomCharacters } from '../../src/lib/characters';
 import { supabase } from '../../src/lib/supabase';
+import { getInitials, getColorForName } from '../../src/lib/avatar';
 import { FREE_CUSTOM_CHARACTER_LIMIT } from '../../src/constants/config';
 
-type QueueItem = { uri: string; name: string };
+type QueueItem = { uri: string | null; name: string };
 
 async function compressImage(uri: string): Promise<string> {
   const result = await ImageManipulator.manipulateAsync(
@@ -78,9 +79,24 @@ export default function CharacterCreator() {
     if (!result.canceled) {
       setQueue((prev) => [
         ...prev,
-        ...result.assets.map((a) => ({ uri: a.uri, name: '' })),
+        ...result.assets.map((a) => ({ uri: a.uri as string | null, name: '' })),
       ]);
     }
+  };
+
+  const addByName = () => {
+    if (atCap) {
+      Alert.alert(
+        'Character limit reached',
+        `Free accounts can save up to ${FREE_CUSTOM_CHARACTER_LIMIT} custom characters. Upgrade to Pro for unlimited uploads.`,
+        [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Upgrade to Pro', onPress: () => router.push('/paywall') },
+        ],
+      );
+      return;
+    }
+    setQueue((prev) => [...prev, { uri: null, name: '' }]);
   };
 
   const updateName = (index: number, name: string) => {
@@ -113,7 +129,8 @@ export default function CharacterCreator() {
       while (nextIndex < snapshot.length) {
         const i = nextIndex++;
         try {
-          const compressedUri = await compressImage(snapshot[i].uri);
+          const uri = snapshot[i].uri;
+          const compressedUri = uri ? await compressImage(uri) : null;
           await createCustomCharacter(user!.id, snapshot[i].name, compressedUri, session);
         } catch {
           failedIndices.push(i);
@@ -175,7 +192,7 @@ export default function CharacterCreator() {
           <TouchableOpacity
             onPress={pickFromLibrary}
             activeOpacity={0.8}
-            className="flex-row items-center rounded-2xl p-4 mb-4"
+            className="flex-row items-center rounded-2xl p-4 mb-3"
             style={{ borderWidth: 2, borderColor: '#7C3AED', borderStyle: 'dashed', backgroundColor: '#F5F3FF' }}
           >
             <View className="w-11 h-11 rounded-xl bg-primary-600 items-center justify-center mr-3">
@@ -188,19 +205,53 @@ export default function CharacterCreator() {
             <Ionicons name="add" size={22} color="#7C3AED" />
           </TouchableOpacity>
 
+          {/* Name-only card */}
+          <TouchableOpacity
+            onPress={addByName}
+            activeOpacity={0.8}
+            className="flex-row items-center rounded-2xl p-4 mb-4"
+            style={{ borderWidth: 2, borderColor: '#7C3AED', borderStyle: 'dashed', backgroundColor: '#F5F3FF' }}
+          >
+            <View className="w-11 h-11 rounded-xl bg-primary-600 items-center justify-center mr-3">
+              <Ionicons name="person-add-outline" size={20} color="white" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-primary-700 font-semibold text-sm">Add character by name</Text>
+              <Text className="text-primary-500 text-xs mt-0.5">Quick add — no photo needed</Text>
+            </View>
+            <Ionicons name="add" size={22} color="#7C3AED" />
+          </TouchableOpacity>
+
           {/* Queue */}
           {queue.map((item, index) => {
             const hasName = item.name.trim().length > 0;
             return (
               <View
-                key={`${item.uri}-${index}`}
+                key={`${item.uri ?? 'no-photo'}-${index}`}
                 className="flex-row items-center gap-3 mb-3 bg-white rounded-2xl p-3 border border-gray-200"
               >
-                <Image
-                  source={{ uri: item.uri }}
-                  style={{ width: 56, height: 56, borderRadius: 12 }}
-                  resizeMode="cover"
-                />
+                {item.uri ? (
+                  <Image
+                    source={{ uri: item.uri }}
+                    style={{ width: 56, height: 56, borderRadius: 12 }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 12,
+                      backgroundColor: getColorForName(item.name),
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ color: 'white', fontWeight: '700', fontSize: 20 }}>
+                      {getInitials(item.name)}
+                    </Text>
+                  </View>
+                )}
                 <TextInput
                   value={item.name}
                   onChangeText={(text) => updateName(index, text)}

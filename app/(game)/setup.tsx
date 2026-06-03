@@ -12,6 +12,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../src/components/ui/Button';
+import { CharacterImage } from '../../src/components/game/CharacterImage';
 import { JoinCodeInput } from '../../src/components/ui/JoinCodeInput';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useSubscription } from '../../src/hooks/useSubscription';
@@ -51,10 +52,11 @@ function SetupCharacterCard({
         className="rounded-xl overflow-hidden"
         style={{ borderWidth: 2, borderColor: selected ? borderColor : '#E5E0D5' }}
       >
-        <Image
-          source={{ uri: character.image_url }}
+        <CharacterImage
+          name={character.name}
+          imageUrl={character.image_url}
           style={{ width: '100%', aspectRatio: 1 }}
-          resizeMode="cover"
+          initialsFontSize={26}
         />
         {selected && (
           <View
