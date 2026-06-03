@@ -12,6 +12,7 @@ interface GameState {
   setCharacters: (chars: Character[]) => void;
   setMyRole: (role: PlayerRole) => void;
   syncFromServer: (session: GameSession) => void;
+  seedMyEliminated: (session: GameSession) => void;
   eliminateLocally: (characterId: string) => void;
   clearGame: () => void;
 }
@@ -33,14 +34,22 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   setMyRole: (myRole) => set({ myRole }),
 
-  syncFromServer: (session) => {
-    const { myRole, myEliminated } = get();
-    // On server sync, reconcile local eliminated with server eliminated
-    const serverEliminated =
+  // Sync only mutates `session`. `myEliminated` is locally authoritative —
+  // the user is the only writer of their own eliminated list, and they get
+  // to add/remove freely as a personal tracking aid until endTurn pushes
+  // the list to the server.
+  syncFromServer: (session) => set({ session }),
+
+  // Seed the local eliminated set from the server's persisted list. Call
+  // this once on board init so a returning player sees their last saved
+  // eliminations; don't call it on subsequent syncs or local removals
+  // would be clobbered.
+  seedMyEliminated: (session) => {
+    const { myRole } = get();
+    if (!myRole) return;
+    const persisted =
       myRole === 'host' ? session.host_eliminated : session.guest_eliminated;
-    // Merge: keep local items that aren't server-confirmed yet (optimistic)
-    const merged = Array.from(new Set([...serverEliminated, ...myEliminated]));
-    set({ session, myEliminated: merged });
+    set({ myEliminated: [...persisted] });
   },
 
   eliminateLocally: (characterId) => {

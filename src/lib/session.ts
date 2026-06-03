@@ -98,6 +98,7 @@ export async function endTurn(
   sessionId: string,
   role: 'host' | 'guest',
   eliminatedIds: string[],
+  currentTurnCount: number,
 ): Promise<void> {
   const eliminatedField = role === 'host' ? 'host_eliminated' : 'guest_eliminated';
   const nextTurn = role === 'host' ? 'guest' : 'host';
@@ -107,6 +108,7 @@ export async function endTurn(
     .update({
       [eliminatedField]: eliminatedIds,
       current_turn: nextTurn,
+      turn_count: currentTurnCount + 1,
     })
     .eq('id', sessionId);
 
