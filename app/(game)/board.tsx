@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { CharacterGrid } from '../../src/components/game/CharacterGrid';
 import { TurnIndicator } from '../../src/components/game/TurnIndicator';
@@ -186,32 +186,34 @@ export default function Board() {
 
       {/* Guess Modal */}
       <Modal visible={guessModalVisible} animationType="slide">
-        <SafeAreaView className="flex-1 bg-background">
-          <View className="px-4 pt-4 pb-2 flex-row items-center justify-between">
-            <Text className="text-navy text-lg font-bold">Who is your opponent?</Text>
-            <TouchableOpacity onPress={() => setGuessModalVisible(false)}>
-              <Text className="text-gray-500 text-base">Cancel</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView className="flex-1 px-1">
-            <CharacterGrid
-              characters={characters}
-              eliminated={[]}
-              selectedId={guessSelected?.id}
-              onPress={setGuessSelected}
-              numColumns={characters.length === 36 ? 6 : 4}
-            />
-          </ScrollView>
-          <View className="px-4 pb-6 pt-3">
-            <Button
-              title={guessSelected ? `Guess ${guessSelected.name}` : 'Select a character'}
-              disabled={!guessSelected}
-              loading={submittingGuess}
-              onPress={handleSubmitGuess}
-              size="lg"
-            />
-          </View>
-        </SafeAreaView>
+        <SafeAreaProvider>
+          <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom', 'left', 'right']}>
+            <View className="px-4 pt-4 pb-2 flex-row items-center justify-between">
+              <Text className="text-navy text-lg font-bold">Who is your opponent?</Text>
+              <TouchableOpacity onPress={() => setGuessModalVisible(false)}>
+                <Text className="text-gray-500 text-base">Cancel</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView className="flex-1 px-1">
+              <CharacterGrid
+                characters={characters}
+                eliminated={[]}
+                selectedId={guessSelected?.id}
+                onPress={setGuessSelected}
+                numColumns={characters.length === 36 ? 6 : 4}
+              />
+            </ScrollView>
+            <View className="px-4 pb-6 pt-3">
+              <Button
+                title={guessSelected ? `Guess ${guessSelected.name}` : 'Select a character'}
+                disabled={!guessSelected}
+                loading={submittingGuess}
+                onPress={handleSubmitGuess}
+                size="lg"
+              />
+            </View>
+          </SafeAreaView>
+        </SafeAreaProvider>
       </Modal>
 
       {/* Win Modal */}
