@@ -141,7 +141,7 @@ export default function Board() {
               <View>
                 <Text className="text-gray-500 text-xs">You are…</Text>
                 <Text className="text-navy font-bold text-sm">{myCharacter.name}</Text>
-                <Text className="text-gray-400 text-xs">Don't show your opponent!</Text>
+                <Text className="text-gray-400 text-xs">Don&apos;t show your opponent!</Text>
               </View>
             </View>
           )}
@@ -180,7 +180,7 @@ export default function Board() {
         {!isMine && (
           <View className="px-4 mt-4 pb-8">
             <View className="bg-white rounded-2xl p-4 items-center border border-gray-200">
-              <Text className="text-gray-400 text-sm">Waiting for opponent's turn…</Text>
+              <Text className="text-gray-400 text-sm">Waiting for opponent&apos;s turn…</Text>
             </View>
           </View>
         )}
