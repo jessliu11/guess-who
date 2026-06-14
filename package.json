@@ -15,7 +15,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "seed": "tsx scripts/seed-characters.ts",
+    "seed:prod": "ENV_FILE=.env.local tsx scripts/seed-characters.ts"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

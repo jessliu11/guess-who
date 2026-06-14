@@ -59,10 +59,10 @@ schema_paths = []
 
 [db.seed]
 # If enabled, seeds the database after migrations during a db reset.
+# Content (categories, packs, characters) is seeded by `npm run seed`
+# from data/categories.json + data/characters/<id>.json — no SQL fixtures.
 enabled = true
-# Specifies an ordered list of seed files to load during db reset.
-# Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seeds/characters.sql", "./seeds/pack_links.sql"]
+sql_paths = []
 
 [db.network_restrictions]
 # Enable management of network restrictions.

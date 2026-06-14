@@ -1,0 +1,62 @@
+[
+  {
+    "id": "summer-i-turned-pretty",
+    "label": "The Summer I Turned Pretty",
+    "description": "Characters from the beach-town love-triangle series",
+    "emoji": "☀️",
+    "sortOrder": 1,
+    "packShareCode": "TSITP",
+    "packName": "The Summer I Turned Pretty",
+    "requiresPremium": false
+  },
+  {
+    "id": "off-campus",
+    "label": "Off Campus",
+    "description": "Briar U hockey players and the people in their orbit",
+    "emoji": "🏒",
+    "sortOrder": 2,
+    "packShareCode": "OFFC",
+    "packName": "Off Campus",
+    "requiresPremium": false
+  },
+  {
+    "id": "heated-rivalry",
+    "label": "Heated Rivalry",
+    "description": "Stars of the hockey-romance series",
+    "emoji": "🔥",
+    "sortOrder": 3,
+    "packShareCode": "HR",
+    "packName": "Heated Rivalry",
+    "requiresPremium": false
+  },
+  {
+    "id": "kpop-idols",
+    "label": "K-Pop Idols",
+    "description": "Members of K-pop's biggest groups",
+    "emoji": "🎤",
+    "sortOrder": 4,
+    "packShareCode": "KPOP",
+    "packName": "K-Pop Idols",
+    "requiresPremium": false
+  },
+  {
+    "id": "taylor-swift-songs",
+    "label": "Taylor Swift Songs",
+    "description": "Songs from Taylor Swift's catalog",
+    "emoji": "🎵",
+    "sortOrder": 5,
+    "packShareCode": "TSWIFT",
+    "packName": "Taylor Swift Songs",
+    "requiresPremium": false
+  },
+  {
+    "id": "landmarks",
+    "label": "Landmarks",
+    "description": "Iconic landmarks from around the world",
+    "emoji": "🗽",
+    "sortOrder": 6,
+    "packShareCode": "LMRK",
+    "packName": "Landmarks",
+    "requiresPremium": false
+  }
+]

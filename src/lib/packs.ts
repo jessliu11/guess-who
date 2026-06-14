@@ -75,22 +75,13 @@ export async function deletePack(packId: string, userId: string): Promise<void> 
   if (error) throw error;
 }
 
-export async function getCharactersByCategory(
-  categoryId: string,
-  tier?: 'standard' | 'extended' | 'all',
-): Promise<Character[]> {
-  let query = supabase
+export async function getCharactersByCategory(categoryId: string): Promise<Character[]> {
+  const { data, error } = await supabase
     .from('characters')
     .select()
     .eq('category_id', categoryId)
     .eq('is_active', true)
     .order('sort_order');
-
-  if (tier && tier !== 'all') {
-    query = query.eq('tier', tier);
-  }
-
-  const { data, error } = await query;
   if (error) throw error;
   return data as Character[];
 }
