@@ -102,6 +102,44 @@ export async function createCustomCharacter(
   return data as Character;
 }
 
+export async function updateCustomCharacter(
+  characterId: string,
+  userId: string,
+  name: string,
+  imageUri: string | null,
+  preloadedSession?: Session | null,
+): Promise<void> {
+  let imageUrl: string | undefined;
+
+  if (imageUri && !imageUri.startsWith('http')) {
+    const storagePath = `custom/${userId}/${characterId}.jpg`;
+    const session =
+      preloadedSession ??
+      (await supabase.auth.getSession()).data.session;
+    if (!session) throw new Error('Not authenticated. Please sign in again.');
+
+    const buffer = await fetchImageBuffer(imageUri);
+    const { error: uploadErr } = await supabase.storage
+      .from('character-images')
+      .upload(storagePath, buffer, { contentType: 'image/jpeg', upsert: true });
+    if (uploadErr) throw new Error(uploadErr.message);
+
+    imageUrl = supabase.storage
+      .from('character-images')
+      .getPublicUrl(storagePath).data.publicUrl;
+  }
+
+  const updates: Record<string, string> = { name: name.trim() };
+  if (imageUrl) updates.image_url = imageUrl;
+
+  const { error } = await supabase
+    .from('characters')
+    .update(updates)
+    .eq('id', characterId)
+    .eq('creator_id', userId);
+  if (error) throw error;
+}
+
 export async function deleteCustomCharacter(
   characterId: string,
   userId: string,
