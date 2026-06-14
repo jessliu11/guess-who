@@ -7,6 +7,10 @@
 -- - Add `slug` column with per-category uniqueness: stable
 --   identifier used by the seed script to match rows across runs
 --   (renames stay safe).
+-- - Wipe existing system characters: the seed script (npm run seed)
+--   is the new source of truth; rows get re-inserted with proper slugs.
+-- - Backfill custom-character slugs to their UUID (matches the insert
+--   path in src/lib/characters.ts).
 -- =============================================
 
 DROP INDEX IF EXISTS idx_characters_category_tier;
@@ -14,9 +18,17 @@ ALTER TABLE characters DROP COLUMN IF EXISTS tier;
 ALTER TABLE characters DROP COLUMN IF EXISTS attributes;
 
 ALTER TABLE characters ADD COLUMN slug TEXT NOT NULL DEFAULT '';
+
+-- Clear out system content so it can be reseeded cleanly with proper slugs.
+-- User-generated rows (creator_id IS NOT NULL) are preserved.
+DELETE FROM characters WHERE creator_id IS NULL;
+
+-- Custom characters get their UUID as the slug, matching the insert in
+-- src/lib/characters.ts. Guarantees uniqueness within category_id='custom'.
+UPDATE characters SET slug = id::text WHERE creator_id IS NOT NULL;
+
 -- Non-partial unique index so the seed script can use ON CONFLICT (category_id, slug).
--- System characters get slugs from data/characters/<id>.json; custom characters get
--- their UUID as the slug at insert time (see src/lib/characters.ts).
+-- System characters get slugs from data/characters/<id>.json; custom characters use their UUID.
 CREATE UNIQUE INDEX idx_characters_category_slug
   ON characters(category_id, slug);
 
