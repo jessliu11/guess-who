@@ -78,7 +78,7 @@ Who, What, Where? is a mobile-first multiplayer deduction game, a digital reimag
 #### Packs
 - **My Characters** — grid of user-created custom characters; tap to delete
 - **My Packs** — user-built packs with share codes; create new packs (Pro)
-- **All Packs** — browse all system packs with Free/Pro tier badges
+- **All Packs** — browse system packs; each pack shows a Pro badge when `requires_premium` is set
 
 #### Profile
 - Player avatar (initials-based), display name, plan badge
@@ -99,30 +99,18 @@ Who, What, Where? is a mobile-first multiplayer deduction game, a digital reimag
 
 ## Character Packs
 
-Eight system packs are available. Three are free; five require a Pro subscription.
+Six system packs are available, one per category. All are currently free; the schema supports per-pack premium gating via `character_packs.requires_premium` for future packs.
 
-| Pack | Tier | Characters |
-|------|------|-----------|
-| Celebrities | Free | Pop culture icons |
-| Fictional Characters | Free | Movie & TV characters |
-| Cartoons | Free | Animated icons |
-| Athletes | Pro | Sports stars |
-| Actors | Pro | Hollywood legends |
-| Singers | Pro | Musicians |
-| Politicians | Pro | World leaders |
-| Influencers | Pro | Social media personalities |
+| Pack | Characters |
+|------|-----------|
+| The Summer I Turned Pretty | 14 — Belly, Conrad, Jeremiah, … |
+| Off Campus | 12 — Briar U hockey players & their crew |
+| Heated Rivalry | 10 — Shane, Ilya, & the rest of the cast |
+| K-Pop Idols | 26 — members of the biggest groups |
+| Taylor Swift Songs | 26 — songs across the catalog |
+| Landmarks | 14 — iconic places around the world |
 
-Each pack includes a **standard tier** of ~24 characters, plus an **extended tier** of 20–24 additional characters available to Pro users.
-
-Characters have structured attributes used for gameplay questions:
-
-- Gender
-- Hair color & length
-- Age group
-- Nationality
-- Facial hair
-- Glasses
-- Notable features
+Each character has a `name`, a `slug` (kebab-case, unique within its category), and an `image_url` pointing at an asset in the `character-images` Supabase Storage bucket. Source of truth for system content is `data/categories.json` + `data/characters/<categoryId>.json`; see CLAUDE.md "Updating seed content" for the workflow.
 
 ---
 
@@ -139,8 +127,8 @@ Characters have structured attributes used for gameplay questions:
 
 ### Pack Builder (Pro Only)
 
-- Select characters from any of the 8 system categories
-- Choose 20–24 characters to include in the pack
+- Select characters from any system category
+- Choose up to 24 characters to include in the pack
 - Name the pack and pick 4 preview images
 - A unique 6-character **share code** is auto-generated
 - Share the code with anyone — they can join games using your pack
@@ -152,8 +140,8 @@ Characters have structured attributes used for gameplay questions:
 
 ### Free Plan
 
-- Access to 3 character packs (Celebrities, Fictional Characters, Cartoons)
-- Up to 12 custom characters
+- Access to every system pack that isn't `requires_premium=true` — at launch, all 6 system packs are free
+- Up to 12 custom characters (see `FREE_CUSTOM_CHARACTER_LIMIT` in `src/constants/config.ts`)
 - Unlimited game plays using free packs
 - Player stats
 
@@ -166,11 +154,10 @@ Characters have structured attributes used for gameplay questions:
 
 **Pro includes everything in Free, plus:**
 
-- All 8 character packs unlocked
-- Extended character tiers in every pack
+- Premium system packs (none gated at launch — schema supports `requires_premium=true` per pack)
 - Unlimited custom character uploads
 - Pack Builder — create, name, and share custom packs
-- Future pack categories automatically included
+- Future pack categories that ship as premium
 
 Subscriptions auto-renew; users can cancel via device Settings. Managed via RevenueCat.
 
@@ -248,11 +235,11 @@ Extends Supabase Auth users.
 |--------|------|-------|
 | id | UUID | PK |
 | category_id | TEXT | FK → categories |
-| creator_id | UUID | NULL for system characters |
+| creator_id | UUID | NULL for system characters; user UUID for customs |
 | name | TEXT | |
-| image_url | TEXT | |
-| attributes | JSONB | Gameplay question metadata |
-| tier | TEXT | `standard` or `extended` |
+| slug | TEXT | Kebab-case identifier; UNIQUE per `(category_id, slug)`. For customs the slug = `id::text`. |
+| image_url | TEXT | Nullable; public URL in `character-images` bucket |
+| is_active | BOOLEAN | Soft-hide flag — `getCharactersByCategory` filters to `true` |
 
 #### `character_packs`
 
@@ -274,9 +261,9 @@ Extends Supabase Auth users.
 | id | UUID | PK |
 | join_code | TEXT | Unique, 6-char |
 | host_id / guest_id | UUID | FK → profiles |
-| pack_id | UUID | FK → character_packs |
+| pack_id | UUID | FK → character_packs; `ON DELETE SET NULL` |
 | status | TEXT | `waiting` `selecting` `active` `finished` `abandoned` |
-| host_character_id / guest_character_id | UUID | Secret characters |
+| host_character_id / guest_character_id | UUID | Secret characters; both FKs are `ON DELETE SET NULL` so deleting a character won't block — in-flight games degrade gracefully |
 | current_turn | TEXT | `host` or `guest` |
 | winner | TEXT | `host`, `guest`, or NULL |
 | character_pool | UUID[] | Shuffled per session |
@@ -296,7 +283,7 @@ Append-only event log.
 | payload | JSONB | Move-specific data |
 
 #### `categories`
-System-managed list of character categories (e.g., `celebrities`, `actors`, `singers`).
+System-managed list of character categories (e.g., `summer-i-turned-pretty`, `kpop-idols`, `landmarks`). The reserved `custom` row holds user-generated characters and is never touched by the seed script.
 
 ---
 
@@ -365,28 +352,35 @@ supabase status
 
 ### Seed Data
 
-The local database is seeded automatically on `supabase db reset` via two files in `supabase/seeds/`:
+Categories, packs, and characters are seeded via `npm run seed` from the `data/` directory — `supabase db reset` only handles migrations (the `config.toml` `sql_paths` list is empty by design).
 
-| File | Contents |
+| Path | Role |
 |---|---|
-| `characters.sql` | 192 system characters (160 standard, 32 extended), sourced from prod |
-| `pack_links.sql` | `character_ids` arrays linking each of the 16 system packs to their characters |
+| `data/categories.json` | Source of truth: one entry per category with its pack metadata (`packShareCode`, `requiresPremium`, etc.) |
+| `data/characters/<categoryId>.json` | Per-category list of `{ slug, name }` entries |
+| `data/characters/images/<categoryId>/<slug>.<ext>` | Optional local image file (`jpg`, `jpeg`, `png`, `webp`, `avif`); missing files fall back to a `placehold.co` placeholder |
 
-Character image URLs in the seed point to the production Storage bucket and load correctly in both environments (bucket is public).
-
-To re-sync seed data from production (e.g. after new characters are added to prod):
+Workflow:
 
 ```bash
-# Re-export characters from prod and apply locally
+# Apply migrations to local CLI
 supabase db reset
+
+# Dry-run (default) — prints a per-category diff, exits without writing
+npm run seed
+
+# Apply
+npm run seed -- --apply
+
+# Scope a run to one category while iterating
+npm run seed -- --category landmarks --apply
+
+# Same flow against prod (reads .env.local instead of .env.development.local)
+npm run seed:prod
+npm run seed:prod -- --apply
 ```
 
-Or manually re-run the export and apply:
-```bash
-# Fetch updated characters from prod REST API → regenerate seeds → apply to local DB
-docker exec -i supabase_db_guess-who psql -U postgres < supabase/seeds/characters.sql
-docker exec -i supabase_db_guess-who psql -U postgres < supabase/seeds/pack_links.sql
-```
+Sync logic (all idempotent): upserts categories, packs, and characters from JSON; hard-deletes system content removed from JSON (and its `character-images` storage object). Always preserves the `custom` category and any row with `creator_id IS NOT NULL`. See CLAUDE.md "Updating seed content" for the team workflow.
 
 ### Physical Device Notes
 
