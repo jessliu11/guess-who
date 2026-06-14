@@ -19,6 +19,12 @@ ALTER TABLE characters DROP COLUMN IF EXISTS attributes;
 
 ALTER TABLE characters ADD COLUMN slug TEXT NOT NULL DEFAULT '';
 
+-- Clear all game_sessions first: they reference characters/packs via FK with no
+-- ON DELETE clause. game_moves cascades automatically via its session_id FK.
+-- The app has no external users; surviving rows would point at character_ids and
+-- pack_ids that no longer exist after the seed runs anyway.
+DELETE FROM game_sessions;
+
 -- Clear out system content so it can be reseeded cleanly with proper slugs.
 -- User-generated rows (creator_id IS NOT NULL) are preserved.
 DELETE FROM characters WHERE creator_id IS NULL;
