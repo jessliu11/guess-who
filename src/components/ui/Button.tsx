@@ -23,9 +23,9 @@ const variantStyles: Record<string, { container: string; text: string }> = {
 };
 
 const sizeStyles: Record<string, { container: string; text: string }> = {
-  sm: { container: 'px-4 py-2 rounded-xl', text: 'text-sm' },
-  md: { container: 'px-6 py-3.5 rounded-2xl', text: 'text-base' },
-  lg: { container: 'px-8 py-4 rounded-2xl', text: 'text-lg' },
+  sm: { container: 'px-4 py-2 rounded-full', text: 'text-sm' },
+  md: { container: 'px-6 py-3.5 rounded-full', text: 'text-base' },
+  lg: { container: 'px-8 py-4 rounded-full', text: 'text-lg' },
 };
 
 export function Button({
