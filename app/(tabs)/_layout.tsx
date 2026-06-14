@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
 import { View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Play, Grid2X2, User } from 'lucide-react-native';
 
-function TabIcon({ name, color, focused }: { name: keyof typeof Ionicons.glyphMap; color: string; focused: boolean }) {
+function TabIcon({ Icon, color, focused }: { Icon: React.ComponentType<{ size: number; color: string }>; color: string; focused: boolean }) {
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center' }}>
       {focused && (
@@ -15,7 +15,7 @@ function TabIcon({ name, color, focused }: { name: keyof typeof Ionicons.glyphMa
           backgroundColor: '#7C3AED',
         }} />
       )}
-      <Ionicons name={name} size={24} color={color} />
+      <Icon size={24} color={color} />
     </View>
   );
 }
@@ -27,7 +27,7 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
-          borderTopColor: '#E5E7EB',
+          borderTopColor: '#E5E0D5',
           borderTopWidth: 1,
           height: 76,
           paddingBottom: 16,
@@ -38,7 +38,7 @@ export default function TabsLayout() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          fontFamily: 'Inter_600SemiBold',
+          fontFamily: 'Poppins_600SemiBold',
           marginTop: 2,
         },
       }}
@@ -48,7 +48,7 @@ export default function TabsLayout() {
         options={{
           title: 'Play',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="play-circle-outline" color={color} focused={focused} />
+            <TabIcon Icon={Play} color={color} focused={focused} />
           ),
         }}
       />
@@ -57,7 +57,7 @@ export default function TabsLayout() {
         options={{
           title: 'Packs',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="grid-outline" color={color} focused={focused} />
+            <TabIcon Icon={Grid2X2} color={color} focused={focused} />
           ),
         }}
       />
@@ -66,7 +66,7 @@ export default function TabsLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="person-outline" color={color} focused={focused} />
+            <TabIcon Icon={User} color={color} focused={focused} />
           ),
         }}
       />
