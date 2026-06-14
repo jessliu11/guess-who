@@ -1,0 +1,62 @@
+import { create } from 'zustand';
+import type { Character, CharacterPack } from '../types/game.types';
+
+interface SetupStore {
+  selectedIds: Set<string>;
+  /** Cached characters per pack/source ID */
+  packCharacters: Record<string, Character[]>;
+  myCharacters: Character[];
+  packs: CharacterPack[];
+  toggle: (id: string) => void;
+  selectMany: (ids: string[]) => void;
+  deselectMany: (ids: string[]) => void;
+  setPackCharacters: (sourceId: string, chars: Character[]) => void;
+  setMyCharacters: (chars: Character[]) => void;
+  setPacks: (packs: CharacterPack[]) => void;
+  reset: () => void;
+}
+
+export const useSetupStore = create<SetupStore>((set) => ({
+  selectedIds: new Set<string>(),
+  packCharacters: {},
+  myCharacters: [],
+  packs: [],
+
+  toggle: (id) =>
+    set((s) => {
+      const next = new Set(s.selectedIds);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return { selectedIds: next };
+    }),
+
+  selectMany: (ids) =>
+    set((s) => {
+      const next = new Set(s.selectedIds);
+      ids.forEach((id) => next.add(id));
+      return { selectedIds: next };
+    }),
+
+  deselectMany: (ids) =>
+    set((s) => {
+      const next = new Set(s.selectedIds);
+      ids.forEach((id) => next.delete(id));
+      return { selectedIds: next };
+    }),
+
+  setPackCharacters: (sourceId, chars) =>
+    set((s) => ({
+      packCharacters: { ...s.packCharacters, [sourceId]: chars },
+    })),
+
+  setMyCharacters: (chars) => set({ myCharacters: chars }),
+  setPacks: (packs) => set({ packs }),
+
+  reset: () =>
+    set({
+      selectedIds: new Set<string>(),
+      packCharacters: {},
+      myCharacters: [],
+      packs: [],
+    }),
+}));
