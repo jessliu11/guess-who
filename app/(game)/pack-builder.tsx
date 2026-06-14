@@ -43,7 +43,7 @@ export default function PackBuilder() {
 
   useEffect(() => {
     setLoadingChars(true);
-    getCharactersByCategory(selectedCategory, 'all')
+    getCharactersByCategory(selectedCategory)
       .then(setAllChars)
       .finally(() => setLoadingChars(false));
   }, [selectedCategory]);

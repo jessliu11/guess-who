@@ -19,7 +19,7 @@ export default function Welcome() {
           .from('characters')
           .select('image_url')
           .eq('is_active', true)
-          .eq('tier', 'standard')
+          .is('creator_id', null)
           .not('image_url', 'is', null)
           .limit(4);
         if (data && data.length > 0) {

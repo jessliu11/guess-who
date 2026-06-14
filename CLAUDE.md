@@ -61,6 +61,29 @@ CI runs the same three. If they pass locally, they pass in CI.
 - After merge to `master`: deploy to prod with `supabase db push`. Confirm with the user before running.
 - The remote migration history is already in sync with local (repaired 2026-06-02 for 001–011). Future `db push` calls just apply genuinely new migrations.
 
+## Updating seed content (categories, packs, characters)
+
+Source of truth lives under `data/`. **No migrations needed for content changes** — only for schema changes.
+
+- `data/categories.json` — one entry per system category (id, label, description, emoji, sortOrder, packShareCode, packName, requiresPremium). One pack per category.
+- `data/characters/<categoryId>.json` — array of `{ slug, name }`. `slug` is kebab-case, unique within the category.
+- `data/characters/images/<categoryId>/<slug>.{jpg|png|webp}` — image for each character. Missing files seed as `placehold.co` placeholders with a dry-run warning.
+
+Workflow:
+
+1. Edit JSON / drop image files.
+2. `npm run seed` — dry-run against local CLI (reads `.env.development.local`).
+3. `npm run seed -- --apply` — writes to local CLI.
+4. Verify in the simulator.
+5. PR → merge.
+6. `npm run seed:prod` (dry-run, reads `.env.local`) → `npm run seed:prod -- --apply` to deploy content to prod. **Confirm with the user before applying to prod.**
+
+Other flags: `--category <id>` scopes a run to one category.
+
+The seed script requires `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (not the `EXPO_PUBLIC_*` keys) in the env file. Local CLI values come from `supabase status`.
+
+The seed script preserves `category_id = 'custom'` and any rows with `creator_id IS NOT NULL` (user-generated content) — it never touches them.
+
 ## Environment variables
 
 All client-visible vars use the `EXPO_PUBLIC_*` prefix so Expo embeds them in the bundle. Don't put secrets here — anything `EXPO_PUBLIC_*` ships to users.

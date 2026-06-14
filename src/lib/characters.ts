@@ -84,19 +84,10 @@ export async function createCustomCharacter(
       category_id: 'custom',
       creator_id: userId,
       name: name.trim(),
+      slug: characterId,
       image_url: imageUrl,
-      tier: 'standard',
       is_active: true,
       sort_order: 0,
-      attributes: {
-        gender: 'non-binary',
-        hair_color: 'black',
-        hair_length: 'medium',
-        age_group: 'middle-aged',
-        nationality: 'Custom',
-        facial_hair: false,
-        glasses: false,
-      },
     })
     .select()
     .single();

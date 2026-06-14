@@ -1,0 +1,16 @@
+[
+  { "slug": "statue-of-liberty",     "name": "Statue of Liberty" },
+  { "slug": "golden-gate-bridge",    "name": "Golden Gate Bridge" },
+  { "slug": "big-ben",               "name": "Big Ben" },
+  { "slug": "stonehenge",            "name": "Stonehenge" },
+  { "slug": "leaning-tower-of-pisa", "name": "Leaning Tower of Pisa" },
+  { "slug": "eiffel-tower",          "name": "Eiffel Tower" },
+  { "slug": "parthenon",             "name": "Parthenon" },
+  { "slug": "pyramids-of-giza",      "name": "Pyramids of Giza" },
+  { "slug": "colosseum",             "name": "Colosseum" },
+  { "slug": "taj-mahal",             "name": "Taj Mahal" },
+  { "slug": "great-wall-of-china",   "name": "Great Wall of China" },
+  { "slug": "burj-khalifa",          "name": "Burj Khalifa" },
+  { "slug": "machu-picchu",          "name": "Machu Picchu" },
+  { "slug": "christ-the-redeemer",   "name": "Christ the Redeemer" }
+]

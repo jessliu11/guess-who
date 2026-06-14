@@ -13,25 +13,13 @@ export type MoveType =
   | 'answer_yes'
   | 'answer_no';
 
-export interface CharacterAttributes {
-  gender: 'male' | 'female' | 'non-binary';
-  hair_color: 'black' | 'brown' | 'blonde' | 'red' | 'gray' | 'white' | 'bald';
-  hair_length: 'short' | 'medium' | 'long' | 'bald';
-  age_group: 'young' | 'middle-aged' | 'senior';
-  nationality: string;
-  facial_hair: boolean;
-  glasses: boolean;
-  notable_feature?: string;
-}
-
 export interface Character {
   id: string;
   category_id: string;
   creator_id?: string;
   name: string;
+  slug: string;
   image_url: string | null;
-  tier: 'standard' | 'extended';
-  attributes: CharacterAttributes;
   is_active: boolean;
   sort_order: number;
 }
