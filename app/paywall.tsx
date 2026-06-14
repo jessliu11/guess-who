@@ -3,19 +3,19 @@ import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { X, Package, Wrench, Link, Shuffle, PlusCircle } from 'lucide-react-native';
 import { Button } from '../src/components/ui/Button';
 
 // NOTE: RevenueCat (react-native-purchases) requires an EAS Dev Build.
 // This is a placeholder UI that will be wired to RevenueCat in Phase 5.
 
 const features = [
-  { icon: 'cube-outline' as const, text: 'Extended character pool (50+ per category)' },
-  { icon: 'construct-outline' as const, text: 'Build & save custom packs' },
-  { icon: 'link-outline' as const, text: 'Share packs with a 6-char code' },
-  { icon: 'shuffle-outline' as const, text: 'Mix multiple categories in one pack' },
-  { icon: 'add-circle-outline' as const, text: 'Future categories automatically included' },
-];
+  { Icon: Package, text: 'Extended character pool (50+ per category)' },
+  { Icon: Wrench, text: 'Build & save custom packs' },
+  { Icon: Link, text: 'Share packs with a 6-char code' },
+  { Icon: Shuffle, text: 'Mix multiple categories in one pack' },
+  { Icon: PlusCircle, text: 'Future categories automatically included' },
+] as const;
 
 export default function Paywall() {
   const router = useRouter();
@@ -45,7 +45,7 @@ export default function Paywall() {
             className="absolute top-4 right-4 w-9 h-9 rounded-full items-center justify-center"
             style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
           >
-            <Ionicons name="close" size={18} color="white" />
+            <X size={18} color="white" />
           </TouchableOpacity>
 
           <View className="w-16 h-16 rounded-2xl bg-accent items-center justify-center mb-4">
@@ -59,19 +59,18 @@ export default function Paywall() {
 
         {/* Features */}
         <View className="px-6 py-6 gap-4">
-          {features.map((f, i) => (
+          {features.map(({ Icon, text }, i) => (
             <View key={i} className="flex-row items-center gap-3">
               <View className="w-9 h-9 bg-primary-100 rounded-xl items-center justify-center">
-                <Ionicons name={f.icon} size={18} color="#7C3AED" />
+                <Icon size={18} color="#7C3AED" />
               </View>
-              <Text className="text-navy text-sm flex-1">{f.text}</Text>
+              <Text className="text-navy text-sm flex-1">{text}</Text>
             </View>
           ))}
         </View>
 
         {/* Pricing */}
         <View className="px-6 gap-3 pb-8">
-          {/* Annual (recommended) */}
           <TouchableOpacity
             onPress={() => handleSubscribe('annual')}
             className="border-2 border-primary-600 bg-primary-50 rounded-2xl p-4"
@@ -92,7 +91,6 @@ export default function Paywall() {
             </View>
           </TouchableOpacity>
 
-          {/* Monthly */}
           <TouchableOpacity
             onPress={() => handleSubscribe('monthly')}
             className="border border-gray-200 bg-white rounded-2xl p-4"

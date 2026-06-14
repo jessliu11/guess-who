@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { ChevronLeft } from 'lucide-react-native';
 
 interface ScreenHeaderProps {
   title: string;
@@ -13,20 +14,16 @@ export function ScreenHeader({ title, subtitle, showBack = true, right }: Screen
   const router = useRouter();
 
   return (
-    <View className="px-4 pt-4 pb-3">
+    <View className="px-5 pt-4 pb-3">
       <View className="flex-row items-center justify-between">
         {showBack ? (
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-9 h-9 rounded-full bg-white border border-gray-200 items-center justify-center -ml-1"
-            activeOpacity={0.7}
-          >
-            <Text className="text-navy text-base leading-none">‹</Text>
+          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+            <ChevronLeft size={24} color="#1E1B4B" />
           </TouchableOpacity>
         ) : (
-          <View className="w-9" />
+          <View className="w-6" />
         )}
-        <View className="w-16 items-end">{right ?? null}</View>
+        <View className="flex-1 items-end">{right ?? null}</View>
       </View>
       <View className="mt-2">
         <Text className="text-navy text-2xl font-bold">{title}</Text>
