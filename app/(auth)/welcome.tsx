@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowRight } from 'lucide-react-native';
 import { supabase } from '../../src/lib/supabase';
+import { WelcomeCardAnimation } from '../../src/components/welcome/WelcomeCardAnimation';
 
 export default function Welcome() {
   const router = useRouter();
@@ -35,13 +36,24 @@ export default function Welcome() {
         flex: 1,
         paddingTop: insets.top + 16,
         paddingBottom: insets.bottom + 32,
-        paddingHorizontal: 24,
       }}>
-        {/* Logo / animation placeholder */}
-        <View style={{ flex: 1 }} />
+        {/* Title */}
+        <View style={{ paddingHorizontal: 24, paddingBottom: 8, alignItems: 'center' }}>
+          <Text style={{ fontSize: 36, fontFamily: 'Poppins_700Bold', color: '#FFFFFF', textAlign: 'center' }}>
+            Who What Where?
+          </Text>
+          <Text style={{ fontSize: 15, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.75)', textAlign: 'center', marginTop: 4 }}>
+            The guessing game, reinvented.
+          </Text>
+        </View>
+
+        {/* Card conveyor animation — full width, fills available space */}
+        <View style={{ flex: 1 }}>
+          <WelcomeCardAnimation />
+        </View>
 
         {/* Actions */}
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: 12, paddingHorizontal: 24, paddingTop: 24 }}>
           <TouchableOpacity
             className="bg-white py-4 rounded-full items-center"
             onPress={() => router.push('/(auth)/sign-up')}
