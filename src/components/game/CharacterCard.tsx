@@ -82,7 +82,7 @@ export function CharacterCard({
   const cardFace = (
     <View style={{ height: totalH }}>
       {/* Front face */}
-      <Animated.View style={[{ flex: 1, borderRadius: 10, overflow: 'hidden' }, frontStyle]}>
+      <Animated.View style={[{ flex: 1, overflow: 'hidden' }, frontStyle]}>
         <View className="flex-1 bg-white">
           {character.image_url && !imgError ? (
             <Image
@@ -119,7 +119,7 @@ export function CharacterCard({
       </Animated.View>
 
       {/* Back face — revealed when eliminated */}
-      <Animated.View style={[{ flex: 1, borderRadius: 10, overflow: 'hidden' }, backStyle]}>
+      <Animated.View style={[{ flex: 1, overflow: 'hidden' }, backStyle]}>
         <View className="flex-1 bg-white opacity-40">
           {character.image_url && !imgError ? (
             <Image
