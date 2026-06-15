@@ -22,18 +22,28 @@ function displayPackName(name: string) {
   return name.replace(/\s*[-–—]+\s*(Standard|Extended)\s*$/i, '').trim();
 }
 
+function CollageSlot({ url }: { url: string | undefined }) {
+  const [error, setError] = useState(false);
+  if (url && !error) {
+    return (
+      <Image
+        source={{ uri: url }}
+        style={{ width: '100%', height: '100%' }}
+        resizeMode="cover"
+        onError={() => setError(true)}
+      />
+    );
+  }
+  return <View className="w-full h-full bg-gray-100" />;
+}
+
 /** 2×2 collage of the first 4 preview images for a pack card */
 function PackCollage({ urls }: { urls: string[] }) {
-  const slots = [0, 1, 2, 3];
   return (
     <View className="w-full aspect-square flex-row flex-wrap">
-      {slots.map((i) => (
+      {[0, 1, 2, 3].map((i) => (
         <View key={i} style={{ width: '50%', height: '50%' }}>
-          {urls[i] ? (
-            <Image source={{ uri: urls[i] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-          ) : (
-            <View className="w-full h-full bg-gray-100" />
-          )}
+          <CollageSlot url={urls[i]} />
         </View>
       ))}
     </View>
