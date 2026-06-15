@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -10,30 +10,59 @@ import Animated, {
 import { CharacterCard } from '../game/CharacterCard';
 import type { Character } from '../../types/game.types';
 
-const MOCK_CHARACTERS = [
-  { id: '1', name: 'Nina' },
-  { id: '2', name: 'Sam' },
-  { id: '3', name: 'Diego' },
-  { id: '4', name: 'Mia' },
-  { id: '5', name: 'Alex' },
-  { id: '6', name: 'Faye' },
-  { id: '7', name: 'Kit' },
-] as const;
+// ─── Name pool ────────────────────────────────────────────────────────────────
 
-const CARD_SLOT = 98; // 90px card + 8px margins
-const TOTAL_CARDS_WIDTH = MOCK_CHARACTERS.length * CARD_SLOT; // 686px
-const SPEED = 80; // px/s
+const NAME_POOL = [
+  // Fictional
+  'Harry', 'Hermione', 'Ron', 'Gandalf', 'Frodo', 'Katniss', 'Peeta', 'Daenerys',
+  'Arya', 'Tyrion', 'Cersei', 'Sherlock', 'Watson', 'Elizabeth', 'Darcy', 'Romeo',
+  'Juliet', 'Hamlet', 'Ophelia', 'Atticus', 'Jay Gatsby', 'Huck Finn', 'Holden',
+  'Scarlett', 'Rhett', 'Eowyn', 'Legolas', 'Bilbo', 'Dumbledore', 'Voldemort',
+  // TV characters
+  'Phoebe', 'Monica', 'Rachel', 'Ross', 'Chandler', 'Joey', 'Jesse', 'Walter',
+  'Skyler', 'Lorelai', 'Rory', 'Sookie', 'Luke', 'Michael', 'Dwight', 'Jim',
+  'Pam', 'Leslie', 'April', 'Ben', 'Fleabag', 'Ted Lasso', 'Nate', 'Keeley',
+  'Rebecca', 'Kimmy', 'Titus', 'Moira', 'David', 'Alexis', 'Patrick', 'Schitt',
+  // Celebrities
+  'Beyoncé', 'Rihanna', 'Taylor', 'Billie', 'Ariana', 'Adele', 'Lizzo',
+  'Zendaya', 'Timothée', 'Sydney', 'Florence', 'Harry S', 'Dua Lipa', 'Olivia',
+  'Sabrina', 'Chappell', 'SZA', 'Gracie', 'Cardi B', 'Nicki', 'Doja',
+  // Countries
+  'France', 'Japan', 'Brazil', 'Kenya', 'Iceland', 'Peru', 'Morocco', 'Vietnam',
+  'Norway', 'Ghana', 'Egypt', 'Chile', 'Nepal', 'Croatia', 'Jordan', 'Senegal',
+  // Historical / iconic
+  'Cleopatra', 'Einstein', 'Mozart', 'Frida', 'Picasso', 'Tesla', 'Darwin',
+  'Marie Curie', 'Socrates', 'Plato', 'Caesar', 'Napoleon', 'Joan', 'Lincoln',
+];
 
-export function WelcomeCardAnimation() {
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ─── Single scrolling row ─────────────────────────────────────────────────────
+
+const CARD_SLOT = 82; // 72px (size="sm") + 10px margins
+
+interface RowProps {
+  names: string[];
+  speed: number; // px/s
+}
+
+function CardRow({ names, speed }: RowProps) {
   const { width: screenWidth } = useWindowDimensions();
 
+  const totalCardsWidth = names.length * CARD_SLOT;
   const translateX = useSharedValue(0);
   const [eliminatedSet, setEliminatedSet] = useState(new Set<number>());
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [cycleKey, setCycleKey] = useState(0);
 
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  // Ref so the animation completion callback always calls the latest startCycle
   const startCycleRef = useRef<() => void>(() => {});
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -41,47 +70,33 @@ export function WelcomeCardAnimation() {
   }));
 
   useEffect(() => {
-    // Center the card strip on screen so cards are immediately visible.
-    // Cards whose centers already start left of screenCenter are pre-eliminated.
-    const startX = screenWidth / 2 - TOTAL_CARDS_WIDTH / 2;
+    const startX = screenWidth / 2 - totalCardsWidth / 2;
     const screenCenter = screenWidth / 2;
-    // Actual pixel travel from startX to -TOTAL_CARDS_WIDTH
-    const actualTravel = Math.abs(-TOTAL_CARDS_WIDTH - startX);
-    const duration = (actualTravel / SPEED) * 1000;
+    const actualTravel = Math.abs(-totalCardsWidth - startX);
+    const duration = (actualTravel / speed) * 1000;
 
     const preEliminated = new Set(
-      MOCK_CHARACTERS.map((_, i) => i).filter(
-        (i) =>
-          startX + i * CARD_SLOT + 45 < screenCenter &&
-          i < MOCK_CHARACTERS.length - 1,
+      names.map((_, i) => i).filter(
+        (i) => startX + i * CARD_SLOT + 36 < screenCenter && i < names.length - 1,
       ),
     );
 
     const startCycle = () => {
-      // Cancel pending timers from the previous cycle
       timersRef.current.forEach(clearTimeout);
       timersRef.current = [];
-
-      // Reset card states and remount cards (cycleKey change clears isFirstRender refs)
       setEliminatedSet(new Set(preEliminated));
       setSelectedIndex(null);
       setCycleKey((k) => k + 1);
-
-      // Snap the strip back to the start position (no animation)
       translateX.value = startX;
 
-      // Schedule each card's elimination/selection as it crosses screen center
-      MOCK_CHARACTERS.forEach((_, i) => {
-        const cardCenter = startX + i * CARD_SLOT + 45;
+      names.forEach((_, i) => {
+        const cardCenter = startX + i * CARD_SLOT + 36;
         const travelToCenter = cardCenter - screenCenter;
-
-        // Skip cards that are already past center at the start of this cycle
-        if (travelToCenter <= 0 && i < MOCK_CHARACTERS.length - 1) return;
+        if (travelToCenter <= 0 && i < names.length - 1) return;
 
         const delay = Math.max((travelToCenter / actualTravel) * duration, 100);
-
         const t = setTimeout(() => {
-          if (i < MOCK_CHARACTERS.length - 1) {
+          if (i < names.length - 1) {
             setEliminatedSet((prev) => new Set([...prev, i]));
           } else {
             setSelectedIndex(i);
@@ -90,8 +105,7 @@ export function WelcomeCardAnimation() {
         timersRef.current.push(t);
       });
 
-      // Scroll the strip to the left; loop via ref to avoid passing a function to runOnJS
-      translateX.value = withTiming(-TOTAL_CARDS_WIDTH, { duration, easing: Easing.linear }, () => {
+      translateX.value = withTiming(-totalCardsWidth, { duration, easing: Easing.linear }, () => {
         runOnJS(startCycleRef.current)();
       });
     };
@@ -105,29 +119,49 @@ export function WelcomeCardAnimation() {
   }, [screenWidth]);
 
   return (
-    <View style={{ overflow: 'hidden', height: 130, width: '100%' }}>
+    <View style={{ overflow: 'hidden', height: 100, width: '100%' }}>
       <Animated.View
-        style={[{ flexDirection: 'row', position: 'absolute', top: 12 }, animatedStyle]}
+        style={[{ flexDirection: 'row', position: 'absolute', top: 8 }, animatedStyle]}
       >
-        {MOCK_CHARACTERS.map((char, i) => (
+        {names.map((name, i) => (
           <CharacterCard
-            key={`${char.id}-${cycleKey}`}
-            character={
-              {
-                ...char,
-                image_url: null,
-                category_id: '',
-                slug: '',
-                is_active: true,
-                sort_order: i,
-              } as Character
-            }
-            size="md"
+            key={`${name}-${i}-${cycleKey}`}
+            character={{ id: `${i}`, name, image_url: null, category_id: '', slug: '', is_active: true, sort_order: i } as Character}
+            size="sm"
             eliminated={eliminatedSet.has(i)}
             selected={selectedIndex === i}
           />
         ))}
       </Animated.View>
+    </View>
+  );
+}
+
+// ─── Multi-row export ─────────────────────────────────────────────────────────
+
+const ROW_CONFIGS = [
+  { count: 9, speed: 62 },
+  { count: 6, speed: 95 },
+  { count: 8, speed: 74 },
+];
+
+export function WelcomeCardAnimation() {
+  // Randomize once on mount — stable across re-renders
+  const rows = useMemo(() => {
+    const pool = shuffle(NAME_POOL);
+    let offset = 0;
+    return ROW_CONFIGS.map(({ count, speed }) => {
+      const names = pool.slice(offset, offset + count);
+      offset += count;
+      return { names, speed };
+    });
+  }, []);
+
+  return (
+    <View style={{ gap: 4 }}>
+      {rows.map((row, i) => (
+        <CardRow key={i} names={row.names} speed={row.speed} />
+      ))}
     </View>
   );
 }
