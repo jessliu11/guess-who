@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Plus, Lock, ChevronRight, ArrowRight } from 'lucide-react-native';
+import { Plus, Lock, ChevronRight, ArrowRight, Users } from 'lucide-react-native';
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { useAuth } from '../../src/hooks/useAuth';
 import { FREE_CATEGORY_IDS } from '../../src/constants/config';
@@ -135,11 +135,7 @@ export default function Packs() {
       return 0;
     });
 
-  // Thumbnail previews for My Characters row (first 3)
-  const myCharPreviewUrls = customCharacters
-    .filter((c) => !!c.image_url)
-    .slice(0, 3)
-    .map((c) => c.image_url!);
+  const myCharPreviews = customCharacters.slice(0, 3);
 
   return (
     <View style={{ flex: 1, paddingTop: insets.top }} className="bg-background">
@@ -176,19 +172,13 @@ export default function Packs() {
           className="bg-white rounded-2xl border border-[#E5E0D5] px-4 py-3.5 flex-row items-center mb-6"
         >
           {/* Thumbnail cluster */}
-          <View className="flex-row mr-3" style={{ width: 60 }}>
-            {myCharPreviewUrls.length > 0 ? (
-              myCharPreviewUrls.map((url, i) => (
-                <View
-                  key={i}
-                  className="w-8 h-8 rounded-full overflow-hidden border-2 border-background"
-                  style={{ marginLeft: i === 0 ? 0 : -8 }}
-                >
-                  <Image source={{ uri: url }} className="w-full h-full" resizeMode="cover" />
-                </View>
-              ))
-            ) : (
-              customCharacters.slice(0, 3).map((c, i) => (
+          {customCharacters.length === 0 ? (
+            <View className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center mr-3">
+              <Users size={14} color="#9CA3AF" />
+            </View>
+          ) : (
+            <View className="flex-row mr-3">
+              {myCharPreviews.map((c, i) => (
                 <View
                   key={c.id}
                   className="w-8 h-8 rounded-full overflow-hidden border-2 border-background"
@@ -196,14 +186,14 @@ export default function Packs() {
                 >
                   <CharacterImage
                     name={c.name}
-                    imageUrl={null}
+                    imageUrl={c.image_url ?? null}
                     style={{ width: '100%', height: '100%' }}
                     initialsFontSize={10}
                   />
                 </View>
-              ))
-            )}
-          </View>
+              ))}
+            </View>
+          )}
           <View className="flex-1">
             <Text className="text-navy text-sm font-semibold">My characters</Text>
             <Text className="text-gray-400 text-xs mt-0.5">

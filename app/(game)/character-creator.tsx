@@ -249,7 +249,7 @@ export default function CharacterCreator() {
                     placeholderTextColor="#9CA3AF"
                     maxLength={40}
                     returnKeyType="next"
-                    className="flex-1 text-navy text-sm font-sans"
+                    className="flex-1 text-navy text-sm font-semibold"
                   />
                   {/* Remove */}
                   <TouchableOpacity
