@@ -1,31 +1,26 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Star, CreditCard, Bell, HelpCircle, Shield, LogOut, ChevronRight } from 'lucide-react-native';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useSubscription } from '../../src/hooks/useSubscription';
+import { StatCard } from '../../src/components/ui/StatCard';
+import { ConfirmModal } from '../../src/components/ui/ConfirmModal';
+import { Button } from '../../src/components/ui/Button';
 
-function StatBox({ label, value }: { label: string; value: string | number }) {
-  return (
-    <View className="flex-1 bg-white rounded-2xl p-5 items-center border border-gray-200">
-      <Text className="text-navy text-2xl font-bold">{value}</Text>
-      <Text className="text-gray-400 text-xs font-medium mt-1 tracking-wider">{label}</Text>
-    </View>
-  );
-}
+type MenuRowIcon = typeof Star;
 
 function MenuRow({
   label,
-  iconName,
+  Icon,
   iconBg,
   iconColor,
   onPress,
   isLast,
 }: {
   label: string;
-  iconName: keyof typeof Ionicons.glyphMap;
+  Icon: MenuRowIcon;
   iconBg: string;
   iconColor: string;
   onPress: () => void;
@@ -35,28 +30,25 @@ function MenuRow({
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
-      className={`flex-row items-center gap-3 py-4 ${!isLast ? 'border-b border-gray-200' : ''}`}
+      className={`flex-row items-center gap-3 py-4 ${!isLast ? 'border-b border-[#E5E0D5]' : ''}`}
     >
       <View className="w-9 h-9 rounded-xl items-center justify-center" style={{ backgroundColor: iconBg }}>
-        <Ionicons name={iconName} size={18} color={iconColor} />
+        <Icon size={18} color={iconColor} />
       </View>
       <Text className="flex-1 text-navy text-base">{label}</Text>
-      <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+      <ChevronRight size={16} color="#9CA3AF" />
     </TouchableOpacity>
   );
 }
+
+interface InfoState { title: string; message: string }
 
 export default function Profile() {
   const router = useRouter();
   const { profile, signOut, isAnonymous, user } = useAuth();
   const { isPremium } = useSubscription();
-
-  const handleSignOut = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive', onPress: signOut },
-    ]);
-  };
+  const [signOutVisible, setSignOutVisible] = useState(false);
+  const [info, setInfo] = useState<InfoState | null>(null);
 
   const winRate =
     profile && profile.games_played > 0
@@ -80,7 +72,6 @@ export default function Profile() {
           end={{ x: 1, y: 1 }}
           style={{ paddingTop: 64, paddingBottom: 32, alignItems: 'center', paddingHorizontal: 24 }}
         >
-          {/* Avatar */}
           <View style={{
             width: 96, height: 96, borderRadius: 48,
             backgroundColor: 'rgba(255,255,255,0.2)',
@@ -88,10 +79,10 @@ export default function Profile() {
             marginBottom: 12,
             borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)',
           }}>
-            <Text style={{ color: 'white', fontSize: 36, fontWeight: 'bold' }}>{initials}</Text>
+            <Text style={{ color: 'white', fontSize: 36, fontWeight: 'bold', fontFamily: 'Poppins_700Bold' }}>{initials}</Text>
           </View>
 
-          <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', textAlign: 'center', fontFamily: 'Inter_700Bold' }}>
+          <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', textAlign: 'center', fontFamily: 'Poppins_700Bold' }}>
             {profile?.display_name ?? 'Guest Player'}
           </Text>
           {user?.email && (
@@ -105,86 +96,102 @@ export default function Profile() {
             </Text>
           )}
 
-          {/* Plan badge */}
           <View style={{
             marginTop: 12, paddingHorizontal: 16, paddingVertical: 6,
             borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)',
-            alignSelf: 'center',
+            alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 4,
           }}>
+            {isPremium && <Star size={11} color="white" fill="white" />}
             <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold', letterSpacing: 1.5 }}>
-              {isPremium ? '⭐ PRO' : 'FREE PLAN'}
+              {isPremium ? 'PRO' : 'FREE PLAN'}
             </Text>
           </View>
         </LinearGradient>
 
         <View className="px-4 pt-6">
-          {/* Game Stats */}
+          {/* Stats */}
           {profile && (
             <View className="mb-6">
               <Text className="text-navy font-bold text-base mb-3">Game Stats</Text>
               <View className="flex-row gap-3">
-                <StatBox label="PLAYED" value={profile.games_played} />
-                <StatBox label="WON" value={profile.games_won} />
-                <StatBox label="WIN RATE" value={`${winRate}%`} />
+                <StatCard value={profile.games_played} label="Played" />
+                <StatCard value={profile.games_won} label="Won" />
+                <StatCard value={`${winRate}%`} label="Win Rate" />
               </View>
             </View>
           )}
 
           {/* Menu */}
-          <View className="bg-white rounded-2xl px-4 border border-gray-200 mb-4">
+          <View className="bg-white rounded-2xl px-4 border border-[#E5E0D5] mb-4">
             {!isPremium && (
-              <MenuRow
-                label="Upgrade to Pro"
-                iconName="star"
-                iconBg="#FEF3C7"
-                iconColor="#D97706"
-                onPress={() => router.push('/paywall')}
-              />
+              <MenuRow label="Upgrade to Pro" Icon={Star} iconBg="#FEF3C7" iconColor="#D97706" onPress={() => router.push('/paywall')} />
             )}
             {isPremium && (
               <MenuRow
                 label="Manage Subscription"
-                iconName="card"
+                Icon={CreditCard}
                 iconBg="#FEF3C7"
                 iconColor="#D97706"
-                onPress={() => Alert.alert('Subscription', 'Manage in Settings > Apple ID / Google Play.')}
+                onPress={() => setInfo({ title: 'Manage Subscription', message: 'To manage or cancel your subscription, go to Settings > Apple ID > Subscriptions on your device.' })}
               />
             )}
             <MenuRow
               label="Notifications"
-              iconName="notifications-outline"
+              Icon={Bell}
               iconBg="#F3F4F6"
               iconColor="#6B7280"
-              onPress={() => Alert.alert('Coming Soon', 'Notifications will be available soon.')}
+              onPress={() => setInfo({ title: 'Coming Soon', message: 'Notification preferences will be available in a future update.' })}
             />
             <MenuRow
               label="Help & FAQ"
-              iconName="help-circle-outline"
+              Icon={HelpCircle}
               iconBg="#F3F4F6"
               iconColor="#6B7280"
-              onPress={() => Alert.alert('Coming Soon', 'Help & FAQ will be available soon.')}
+              onPress={() => setInfo({ title: 'Help & FAQ', message: 'Our help centre is on its way. For now, reach out to us directly if you need support.' })}
             />
             <MenuRow
               label="Privacy"
-              iconName="shield-outline"
+              Icon={Shield}
               iconBg="#F3F4F6"
               iconColor="#6B7280"
-              onPress={() => Alert.alert('Coming Soon', 'Privacy settings will be available soon.')}
+              onPress={() => setInfo({ title: 'Privacy', message: 'Privacy settings will be available in a future update.' })}
               isLast
             />
           </View>
 
           {/* Sign Out */}
           <TouchableOpacity
-            onPress={handleSignOut}
+            onPress={() => setSignOutVisible(true)}
             activeOpacity={0.7}
-            className="bg-white rounded-2xl px-4 py-4 border border-gray-200 mb-8 flex-row items-center justify-center gap-2"
+            className="bg-white rounded-2xl px-4 py-4 border border-[#E5E0D5] mb-8 flex-row items-center justify-center gap-2"
           >
-            <Ionicons name="log-out-outline" size={18} color="#EF4444" />
+            <LogOut size={18} color="#EF4444" />
             <Text className="text-danger font-semibold text-base">Sign Out</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Sign Out confirm */}
+      <ConfirmModal
+        visible={signOutVisible}
+        title="Sign Out"
+        message="Are you sure you want to sign out?"
+        confirmLabel="Sign Out"
+        destructive
+        onConfirm={() => { setSignOutVisible(false); signOut(); }}
+        onCancel={() => setSignOutVisible(false)}
+      />
+
+      {/* Info modal for menu rows */}
+      <Modal visible={info !== null} transparent animationType="fade" onRequestClose={() => setInfo(null)}>
+        <View className="flex-1 bg-black/60 items-center justify-center px-6">
+          <View className="bg-white rounded-3xl p-6 w-full items-center border border-[#E5E0D5]">
+            <Text className="text-navy text-xl font-bold mb-2 text-center">{info?.title}</Text>
+            <Text className="text-gray-500 text-sm mb-6 text-center">{info?.message}</Text>
+            <Button title="Got it" onPress={() => setInfo(null)} className="w-full" />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

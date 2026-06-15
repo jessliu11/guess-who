@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, View, Text, Image } from 'react-native';
+import { Check, X } from 'lucide-react-native';
 import type { Character } from '../../types/game.types';
 import { getInitials, getColorForName } from '../../lib/avatar';
 
@@ -60,12 +61,12 @@ export function CharacterCard({
         )}
         {eliminated && (
           <View className="absolute inset-0 items-center justify-center">
-            <Text className="text-gray-600 text-2xl font-bold">✕</Text>
+            <X size={28} color="#4B5563" strokeWidth={2.5} />
           </View>
         )}
         {selected && (
           <View className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary-600 items-center justify-center">
-            <Text className="text-white text-[10px] font-bold">✓</Text>
+            <Check size={10} color="white" strokeWidth={3} />
           </View>
         )}
         <View className={`px-1 ${nameplateH} bg-gray-50 items-center justify-center`}>

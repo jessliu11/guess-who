@@ -12,6 +12,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { HelpCircle } from 'lucide-react-native';
 import { CharacterGrid } from '../../src/components/game/CharacterGrid';
 import { CharacterImage } from '../../src/components/game/CharacterImage';
 import { TurnIndicator } from '../../src/components/game/TurnIndicator';
@@ -149,12 +150,9 @@ export default function Board() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="px-4 pt-2 flex-row justify-end">
-        <Button
-          title="Leave Game"
-          variant="danger"
-          size="sm"
-          onPress={() => setConfirmLeaveVisible(true)}
-        />
+        <TouchableOpacity onPress={() => setConfirmLeaveVisible(true)} activeOpacity={0.7} hitSlop={8}>
+          <Text style={{ color: '#EF4444', fontSize: 14, fontFamily: 'Poppins_500Medium' }}>Leave Game</Text>
+        </TouchableOpacity>
       </View>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* My secret character */}
@@ -169,8 +167,8 @@ export default function Board() {
                   blurRadius={8}
                   initialsFontSize={22}
                 />
-                <View className="absolute inset-0 rounded-xl bg-black/40 items-center justify-center">
-                  <Text className="text-white text-xs">🤫</Text>
+                <View className="absolute inset-0 rounded-xl bg-black/25 items-center justify-center">
+                  <HelpCircle size={24} color="white" strokeWidth={2} />
                 </View>
               </View>
               <View>

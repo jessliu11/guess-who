@@ -1,3 +1,11 @@
+// Font families — must match the names registered in app/_layout.tsx
+export const fonts = {
+  regular: 'Poppins_400Regular',
+  medium: 'Poppins_500Medium',
+  semibold: 'Poppins_600SemiBold',
+  bold: 'Poppins_700Bold',
+} as const;
+
 export const colors = {
   primary: '#7C3AED',
   primaryDark: '#6D28D9',

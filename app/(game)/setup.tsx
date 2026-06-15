@@ -10,10 +10,10 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { ChevronLeft, Lock, Check, Minus, ChevronRight, ArrowRight } from 'lucide-react-native';
+import { JoinCodeInput } from '../../src/components/ui/JoinCodeInput';
 import { Button } from '../../src/components/ui/Button';
 import { CharacterImage } from '../../src/components/game/CharacterImage';
-import { JoinCodeInput } from '../../src/components/ui/JoinCodeInput';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { FREE_CATEGORY_IDS } from '../../src/constants/config';
@@ -21,160 +21,105 @@ import { getSystemPacks, getCharactersByIds } from '../../src/lib/packs';
 import { getMyCustomCharacters } from '../../src/lib/characters';
 import { createSession, joinSession } from '../../src/lib/session';
 import { useGameStore } from '../../src/store/gameStore';
-import type { CharacterPack, Character } from '../../src/types/game.types';
+import { useSetupStore } from '../../src/store/setupStore';
+import type { CharacterPack } from '../../src/types/game.types';
 
 const MIN_CHARACTERS = 4;
 const MAX_BOARD_SIZE = 24;
+const MY_CHARS_SOURCE = '__my_characters__';
 
 function displayPackName(name: string) {
   return name.replace(/\s*[-–—]+\s*(Standard|Extended)\s*$/i, '').trim();
 }
-const PACK_BORDER_COLORS = ['#7C3AED', '#F59E0B', '#14B8A6', '#EC4899', '#3B82F6', '#10B981'];
 
-function SetupCharacterCard({
-  character,
-  selected,
-  onToggle,
-  borderColor,
-}: {
-  character: Character;
-  selected: boolean;
-  onToggle: () => void;
-  borderColor: string;
-}) {
+/** 2×2 collage thumbnail */
+function PackCollage({ urls }: { urls: string[] }) {
+  const slots = [0, 1, 2, 3];
   return (
-    <TouchableOpacity
-      onPress={onToggle}
-      activeOpacity={0.7}
-      style={{ width: '23%', margin: '1%' }}
-    >
-      <View
-        className="rounded-xl overflow-hidden"
-        style={{ borderWidth: 2, borderColor: selected ? borderColor : '#E5E0D5' }}
-      >
-        <CharacterImage
-          name={character.name}
-          imageUrl={character.image_url}
-          style={{ width: '100%', aspectRatio: 1 }}
-          initialsFontSize={26}
-        />
-        {selected && (
-          <View
-            className="absolute top-1 right-1 w-5 h-5 rounded-full items-center justify-center"
-            style={{ backgroundColor: borderColor }}
-          >
-            <Text className="text-white text-[10px] font-bold">✓</Text>
-          </View>
-        )}
-        <View className="bg-gray-50 px-1 py-1">
-          <Text className="text-navy text-[10px] text-center" numberOfLines={1}>
-            {character.name}
-          </Text>
+    <View className="w-full aspect-square flex-row flex-wrap">
+      {slots.map((i) => (
+        <View key={i} style={{ width: '50%', height: '50%' }}>
+          {urls[i]
+            ? <Image source={{ uri: urls[i] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+            : <View className="w-full h-full bg-gray-100" />
+          }
         </View>
-      </View>
-    </TouchableOpacity>
+      ))}
+    </View>
   );
 }
 
-function PackSection({
+/** Circle toggle indicator for pack selection state */
+function SelectCircle({ state }: { state: 'none' | 'partial' | 'all' }) {
+  if (state === 'all') {
+    return (
+      <View className="w-7 h-7 rounded-full bg-primary-600 items-center justify-center">
+        <Check size={14} color="white" strokeWidth={3} />
+      </View>
+    );
+  }
+  if (state === 'partial') {
+    return (
+      <View className="w-7 h-7 rounded-full bg-primary-600 items-center justify-center">
+        <Minus size={14} color="white" strokeWidth={3} />
+      </View>
+    );
+  }
+  return (
+    <View className="w-7 h-7 rounded-full border-2 border-gray-300" />
+  );
+}
+
+function PackCard({
   pack,
-  isExpanded,
   isLocked,
-  characters,
-  loadingChars,
-  selectedIds,
-  onToggleExpand,
-  onToggleCharacter,
-  onSelectAll,
-  onDeselectAll,
-  packColor,
+  onPressBody,
+  onPressCircle,
+  circleState,
 }: {
   pack: CharacterPack;
-  isExpanded: boolean;
   isLocked: boolean;
-  characters: Character[];
-  loadingChars: boolean;
-  selectedIds: Set<string>;
-  onToggleExpand: () => void;
-  onToggleCharacter: (id: string) => void;
-  onSelectAll: () => void;
-  onDeselectAll: () => void;
-  packColor: string;
+  onPressBody: () => void;
+  onPressCircle: () => void;
+  circleState: 'none' | 'partial' | 'all';
 }) {
-  const selectedInPack = characters.filter((c) => selectedIds.has(c.id)).length;
-  const imgUrl = pack.preview_image_urls?.[0];
+  const previewUrls = pack.preview_image_urls ?? [];
+  const selectedCount = useSetupStore((s) =>
+    (s.packCharacters[pack.id] ?? []).filter((c) => s.selectedIds.has(c.id)).length
+  );
 
   return (
-    <View className="mb-2 rounded-2xl bg-white border border-gray-200 overflow-hidden">
-      <TouchableOpacity
-        onPress={onToggleExpand}
-        activeOpacity={0.7}
-        className="px-4 py-3.5 flex-row items-center"
-      >
-        {/* Pack icon */}
-        <View className="w-11 h-11 rounded-xl overflow-hidden bg-gray-100 items-center justify-center mr-3">
-          {imgUrl ? (
-            <Image source={{ uri: imgUrl }} className="w-full h-full" resizeMode="cover" />
-          ) : (
-            <Text className="text-xl">🎴</Text>
-          )}
-        </View>
-
-        <View className="flex-1">
-          <Text className={`font-semibold text-sm ${isLocked ? 'text-gray-400' : 'text-navy'}`}>
-            {displayPackName(pack.name)}
-          </Text>
-          <Text className="text-gray-400 text-xs mt-0.5">
-            {isExpanded && selectedInPack > 0
-              ? `${selectedInPack} of ${pack.character_ids.length} selected`
-              : `${pack.character_ids.length} characters`}
-          </Text>
-        </View>
-
-        <View className="flex-row items-center gap-3">
-          {!isLocked && isExpanded && (
-            <TouchableOpacity
-              onPress={selectedInPack > 0 ? onDeselectAll : onSelectAll}
-              className="px-3 py-1.5 rounded-full"
-              style={{ backgroundColor: '#F0EDE8' }}
-            >
-              <Text className="text-gray-600 text-xs font-medium">
-                {selectedInPack > 0 ? 'Deselect All' : 'Select All'}
-              </Text>
-            </TouchableOpacity>
-          )}
-          {isLocked ? (
-            <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" />
-          ) : (
-            <Ionicons
-              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-              size={18}
-              color="#9CA3AF"
-            />
-          )}
-        </View>
-      </TouchableOpacity>
-
-      {isExpanded && !isLocked && (
-        <View className="border-t border-gray-200 px-2 pb-3 pt-2">
-          {loadingChars ? (
-            <ActivityIndicator color="#7C3AED" className="my-4" />
-          ) : (
-            <View className="flex-row flex-wrap">
-              {characters.map((character) => (
-                <SetupCharacterCard
-                  key={character.id}
-                  character={character}
-                  selected={selectedIds.has(character.id)}
-                  onToggle={() => onToggleCharacter(character.id)}
-                  borderColor={packColor}
-                />
-              ))}
+    <TouchableOpacity
+      onPress={onPressBody}
+      activeOpacity={0.85}
+      className="rounded-2xl overflow-hidden bg-white border border-[#E5E0D5]"
+      style={{ flex: 1 }}
+    >
+      <View style={{ position: 'relative' }}>
+        <PackCollage urls={previewUrls} />
+        {isLocked ? (
+          <View className="absolute inset-0 items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}>
+            <View className="bg-white/90 rounded-full p-2">
+              <Lock size={16} color="#1E1B4B" />
             </View>
-          )}
-        </View>
-      )}
-    </View>
+          </View>
+        ) : (
+          <TouchableOpacity
+            onPress={onPressCircle}
+            hitSlop={8}
+            style={{ position: 'absolute', top: 8, right: 8 }}
+          >
+            <SelectCircle state={circleState} />
+          </TouchableOpacity>
+        )}
+      </View>
+      <View className="px-3 py-2.5">
+        <Text className="text-navy text-sm font-semibold" numberOfLines={1}>{displayPackName(pack.name)}</Text>
+        <Text className="text-gray-400 text-xs mt-0.5">
+          {selectedCount > 0 ? `${selectedCount} of ${pack.character_ids.length} selected` : `${pack.character_ids.length} characters`}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -185,95 +130,54 @@ export default function Setup() {
   const { isPremium } = useSubscription();
   const clearGame = useGameStore((s) => s.clearGame);
 
+  const { selectedIds, selectMany, deselectMany, setPackCharacters, setMyCharacters, setPacks, reset, myCharacters, packs, packCharacters } = useSetupStore();
   const isHost = mode !== 'join';
 
-  const [packs, setPacks] = useState<CharacterPack[]>([]);
-  const [customCharacters, setCustomCharacters] = useState<Character[]>([]);
-  const [customExpanded, setCustomExpanded] = useState(false);
-  const [expandedPackIds, setExpandedPackIds] = useState<Set<string>>(new Set());
-  const [packCharacters, setPackCharacters] = useState<Record<string, Character[]>>({});
-  const [loadingCharacters, setLoadingCharacters] = useState<Record<string, boolean>>({});
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingPacks, setLoadingPacks] = useState(isHost);
+  const [togglingPackId, setTogglingPackId] = useState<string | null>(null);
 
   useEffect(() => {
     clearGame();
+    reset();
     if (isHost) {
       Promise.all([
         getSystemPacks(),
         user ? getMyCustomCharacters(user.id) : Promise.resolve([]),
       ]).then(([sp, cc]) => {
         setPacks(sp);
-        setCustomCharacters(cc);
+        setMyCharacters(cc);
       }).finally(() => setLoadingPacks(false));
     }
   }, [isHost, user]);
 
-  const togglePackExpansion = async (pack: CharacterPack) => {
-    const isExpanded = expandedPackIds.has(pack.id);
-    if (isExpanded) {
-      setExpandedPackIds((prev) => {
-        const s = new Set(prev);
-        s.delete(pack.id);
-        return s;
-      });
-    } else {
-      setExpandedPackIds((prev) => new Set([...prev, pack.id]));
-      if (!packCharacters[pack.id]) {
-        setLoadingCharacters((prev) => ({ ...prev, [pack.id]: true }));
-        try {
-          const chars = await getCharactersByIds(pack.character_ids);
-          setPackCharacters((prev) => ({ ...prev, [pack.id]: chars }));
-        } finally {
-          setLoadingCharacters((prev) => ({ ...prev, [pack.id]: false }));
-        }
-      }
+  const ensurePackCharsLoaded = async (packId: string, characterIds: string[]) => {
+    if (packCharacters[packId]) return packCharacters[packId];
+    const chars = await getCharactersByIds(characterIds);
+    setPackCharacters(packId, chars);
+    return chars;
+  };
+
+  const handleTogglePack = async (pack: CharacterPack, isLocked: boolean) => {
+    if (isLocked) { router.push('/paywall'); return; }
+    setTogglingPackId(pack.id);
+    try {
+      const chars = await ensurePackCharsLoaded(pack.id, pack.character_ids);
+      const ids = chars.map((c) => c.id);
+      const allSelected = ids.every((id) => selectedIds.has(id));
+      if (allSelected) deselectMany(ids);
+      else selectMany(ids);
+    } finally {
+      setTogglingPackId(null);
     }
   };
 
-  const toggleCharacter = (id: string) => {
-    setSelectedIds((prev) => {
-      const s = new Set(prev);
-      if (s.has(id)) s.delete(id);
-      else s.add(id);
-      return s;
-    });
-  };
-
-  const selectAllFromPack = (pack: CharacterPack) => {
-    const chars = packCharacters[pack.id] ?? [];
-    setSelectedIds((prev) => {
-      const s = new Set(prev);
-      chars.forEach((c) => s.add(c.id));
-      return s;
-    });
-  };
-
-  const deselectAllFromPack = (pack: CharacterPack) => {
-    const chars = packCharacters[pack.id] ?? [];
-    setSelectedIds((prev) => {
-      const s = new Set(prev);
-      chars.forEach((c) => s.delete(c.id));
-      return s;
-    });
-  };
-
-  const selectAllCustom = () => {
-    setSelectedIds((prev) => {
-      const s = new Set(prev);
-      customCharacters.forEach((c) => s.add(c.id));
-      return s;
-    });
-  };
-
-  const deselectAllCustom = () => {
-    setSelectedIds((prev) => {
-      const s = new Set(prev);
-      customCharacters.forEach((c) => s.delete(c.id));
-      return s;
-    });
+  const handleToggleMyChars = () => {
+    const ids = myCharacters.map((c) => c.id);
+    const allSelected = ids.every((id) => selectedIds.has(id));
+    if (allSelected) deselectMany(ids);
+    else selectMany(ids);
   };
 
   const handleHostStart = async () => {
@@ -320,199 +224,174 @@ export default function Setup() {
       );
     }
 
-    const isFreePack = (p: CharacterPack) =>
-      FREE_CATEGORY_IDS.includes(p.category_id ?? '');
-    const standardPacks = packs
+    const isFreePack = (p: CharacterPack) => FREE_CATEGORY_IDS.includes(p.category_id ?? '');
+    const sortedPacks = [...packs]
       .filter((p) => !p.requires_premium)
       .sort((a, b) => {
-        const aFree = isFreePack(a);
-        const bFree = isFreePack(b);
-        if (aFree && !bFree) return -1;
-        if (!aFree && bFree) return 1;
+        if (isFreePack(a) && !isFreePack(b)) return -1;
+        if (!isFreePack(a) && isFreePack(b)) return 1;
         return 0;
       });
     const extendedPacks = packs.filter((p) => p.requires_premium);
+    const allPacks = [...sortedPacks, ...extendedPacks];
+
     const selectedCount = selectedIds.size;
     const canStart = selectedCount >= MIN_CHARACTERS;
+
+    // My characters selection state
+    const mySelectedCount = myCharacters.filter((c) => selectedIds.has(c.id)).length;
+    const myCircleState: 'none' | 'partial' | 'all' =
+      mySelectedCount === 0 ? 'none' :
+      mySelectedCount === myCharacters.length ? 'all' : 'partial';
+
+    const getPackCircleState = (pack: CharacterPack): 'none' | 'partial' | 'all' => {
+      const chars = packCharacters[pack.id];
+      if (!chars || chars.length === 0) {
+        const selectedFromIds = pack.character_ids.filter((id) => selectedIds.has(id)).length;
+        if (selectedFromIds === 0) return 'none';
+        if (selectedFromIds === pack.character_ids.length) return 'all';
+        return 'partial';
+      }
+      const n = chars.filter((c) => selectedIds.has(c.id)).length;
+      if (n === 0) return 'none';
+      if (n === chars.length) return 'all';
+      return 'partial';
+    };
+
+    const myCharPreviewUrls = myCharacters
+      .filter((c) => !!c.image_url)
+      .slice(0, 3)
+      .map((c) => c.image_url!);
 
     return (
       <SafeAreaView className="flex-1 bg-background">
         {/* Header */}
-        <View className="px-4 pt-4 pb-2 flex-row items-center gap-3">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-9 h-9 rounded-full bg-white border border-gray-200 items-center justify-center"
-            activeOpacity={0.7}
-          >
-            <Text className="text-navy text-base leading-none">‹</Text>
+        <View className="px-5 pt-2 pb-2">
+          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+            <ChevronLeft size={24} color="#1E1B4B" />
           </TouchableOpacity>
-          <View>
-            <Text className="text-navy text-xl font-bold">Host Game</Text>
-            <Text className="text-gray-400 text-xs">Select characters for the board</Text>
-          </View>
         </View>
 
-        <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
-          {/* My Characters */}
-          {customCharacters.length > 0 && (
-            <View className="mb-2 rounded-2xl bg-white border border-gray-200 overflow-hidden">
+        <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
+          <Text className="text-navy text-2xl font-bold mt-1">Host Game</Text>
+          <Text className="text-gray-400 text-sm mt-0.5 mb-5">Select characters for the board</Text>
+
+          {/* Yours section */}
+          {myCharacters.length > 0 && (
+            <>
+              <Text className="text-navy text-sm font-semibold mb-2">Yours</Text>
               <TouchableOpacity
-                onPress={() => setCustomExpanded((v) => !v)}
-                activeOpacity={0.7}
-                className="px-4 py-3.5 flex-row items-center"
+                onPress={() => router.push({ pathname: '/(game)/pack-drill', params: { sourceId: MY_CHARS_SOURCE, title: 'My characters' } } as any)}
+                activeOpacity={0.85}
+                className="rounded-2xl border px-4 py-3.5 flex-row items-center mb-5"
+                style={{ backgroundColor: mySelectedCount > 0 ? '#EDE9FE' : 'white', borderColor: mySelectedCount > 0 ? '#C4B5FD' : '#E5E0D5' }}
               >
-                <View className="w-11 h-11 rounded-xl bg-primary-100 items-center justify-center mr-3">
-                  <Text className="text-xl">🎨</Text>
+                {/* Thumbnail cluster — fixed width prevents overflow into text */}
+                <View style={{ width: 72, marginRight: 12, flexDirection: 'row', alignItems: 'center' }}>
+                  {myCharPreviewUrls.length > 0
+                    ? myCharPreviewUrls.map((url, i) => (
+                        <View key={i} className="w-9 h-9 rounded-full overflow-hidden border-2 border-white" style={{ marginLeft: i === 0 ? 0 : -10 }}>
+                          <Image source={{ uri: url }} className="w-full h-full" resizeMode="cover" />
+                        </View>
+                      ))
+                    : myCharacters.slice(0, 3).map((c, i) => (
+                        <View key={c.id} className="w-9 h-9 rounded-full overflow-hidden border-2 border-white" style={{ marginLeft: i === 0 ? 0 : -10 }}>
+                          <CharacterImage name={c.name} imageUrl={null} style={{ width: '100%', height: '100%' }} initialsFontSize={10} />
+                        </View>
+                      ))
+                  }
                 </View>
                 <View className="flex-1">
-                  <Text className="text-navy font-semibold text-sm">My Characters</Text>
-                  <Text className="text-gray-400 text-xs mt-0.5">
-                    {customExpanded && customCharacters.filter((c) => selectedIds.has(c.id)).length > 0
-                      ? `${customCharacters.filter((c) => selectedIds.has(c.id)).length} of ${customCharacters.length} selected`
-                      : `${customCharacters.length} characters`}
+                  <Text className="text-navy text-sm font-semibold">My characters</Text>
+                  <Text className={`text-xs mt-0.5 ${mySelectedCount > 0 ? 'text-primary-600 font-medium' : 'text-gray-400'}`}>
+                    {mySelectedCount > 0 ? `${mySelectedCount} of ${myCharacters.length} selected` : `${myCharacters.length} characters`}
                   </Text>
                 </View>
-                <View className="flex-row items-center gap-3">
-                  {customExpanded && (
-                    <TouchableOpacity
-                      onPress={customCharacters.some((c) => selectedIds.has(c.id)) ? deselectAllCustom : selectAllCustom}
-                      className="px-3 py-1.5 rounded-full"
-                      style={{ backgroundColor: '#F0EDE8' }}
-                    >
-                      <Text className="text-gray-600 text-xs font-medium">
-                        {customCharacters.some((c) => selectedIds.has(c.id)) ? 'Deselect All' : 'Select All'}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                  <Ionicons
-                    name={customExpanded ? 'chevron-up' : 'chevron-down'}
-                    size={18}
-                    color="#9CA3AF"
-                  />
-                </View>
+                <TouchableOpacity onPress={handleToggleMyChars} hitSlop={8} className="mr-2">
+                  <SelectCircle state={myCircleState} />
+                </TouchableOpacity>
               </TouchableOpacity>
-
-              {customExpanded && (
-                <View className="border-t border-gray-200 px-2 pb-3 pt-2">
-                  <View className="flex-row flex-wrap">
-                    {customCharacters.map((character) => (
-                      <SetupCharacterCard
-                        key={character.id}
-                        character={character}
-                        selected={selectedIds.has(character.id)}
-                        onToggle={() => toggleCharacter(character.id)}
-                        borderColor="#7C3AED"
-                      />
-                    ))}
-                  </View>
-                </View>
-              )}
-            </View>
+            </>
           )}
 
-          {standardPacks.map((pack, i) => {
-            const isLocked = !isPremium && !isFreePack(pack);
-            return (
-              <PackSection
-                key={pack.id}
-                pack={pack}
-                isExpanded={expandedPackIds.has(pack.id)}
-                isLocked={isLocked}
-                characters={packCharacters[pack.id] ?? []}
-                loadingChars={loadingCharacters[pack.id] ?? false}
-                selectedIds={selectedIds}
-                onToggleExpand={() => {
-                  if (isLocked) { router.push('/paywall'); return; }
-                  togglePackExpansion(pack);
-                }}
-                onToggleCharacter={toggleCharacter}
-                onSelectAll={() => selectAllFromPack(pack)}
-                onDeselectAll={() => deselectAllFromPack(pack)}
-                packColor={PACK_BORDER_COLORS[i % PACK_BORDER_COLORS.length]}
-              />
-            );
-          })}
+          {/* From the app section */}
+          <Text className="text-navy text-sm font-semibold mb-3">From the app</Text>
+          <View className="flex-row flex-wrap gap-3 mb-6">
+            {allPacks.map((pack) => {
+              const isLocked = !isPremium && !isFreePack(pack) && !pack.requires_premium || (!isPremium && pack.requires_premium);
+              return (
+                <View key={pack.id} style={{ width: '47%' }}>
+                  <PackCard
+                    pack={pack}
+                    isLocked={isLocked}
+                    onPressBody={() => {
+                      if (isLocked) { router.push('/paywall'); return; }
+                      router.push({ pathname: '/(game)/pack-drill', params: { sourceId: pack.id, title: displayPackName(pack.name) } } as any);
+                    }}
+                    onPressCircle={() => handleTogglePack(pack, isLocked)}
+                    circleState={getPackCircleState(pack)}
+                  />
+                  {togglingPackId === pack.id && (
+                    <View className="absolute inset-0 items-center justify-center rounded-2xl" style={{ backgroundColor: 'rgba(255,255,255,0.7)' }}>
+                      <ActivityIndicator color="#7C3AED" />
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
 
-          {extendedPacks.length > 0 && extendedPacks.map((pack, i) => (
-            <PackSection
-              key={pack.id}
-              pack={pack}
-              isExpanded={expandedPackIds.has(pack.id)}
-              isLocked={!isPremium}
-              characters={packCharacters[pack.id] ?? []}
-              loadingChars={loadingCharacters[pack.id] ?? false}
-              selectedIds={selectedIds}
-              onToggleExpand={() => {
-                if (!isPremium) { router.push('/paywall'); return; }
-                togglePackExpansion(pack);
-              }}
-              onToggleCharacter={toggleCharacter}
-              onSelectAll={() => selectAllFromPack(pack)}
-              onDeselectAll={() => deselectAllFromPack(pack)}
-              packColor={PACK_BORDER_COLORS[(standardPacks.length + i) % PACK_BORDER_COLORS.length]}
-            />
-          ))}
-
-          {/* Spacer for sticky footer */}
-          <View className="h-32" />
+          <View className="h-28" />
         </ScrollView>
 
         {/* Sticky footer */}
-        <View className="bg-background border-t border-gray-200 px-4 pt-3 pb-4">
-          <View className="flex-row items-center justify-between">
-            <View>
-              <Text className="text-navy font-bold text-base">{selectedCount} selected</Text>
-              <Text className="text-gray-400 text-xs">
-                {!canStart
-                  ? `Min ${MIN_CHARACTERS} to play`
-                  : selectedCount > MAX_BOARD_SIZE
-                    ? `${MAX_BOARD_SIZE} will be randomly drawn from your ${selectedCount}`
-                    : 'Ready to go!'}
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={handleHostStart}
-              disabled={!canStart || loading}
-              className="flex-row items-center gap-2 px-6 py-3.5 rounded-2xl"
-              style={{ backgroundColor: canStart ? '#7C3AED' : '#C4B5FD' }}
-              activeOpacity={0.85}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <>
-                  <Ionicons name="arrow-forward" size={18} color="white" />
-                  <Text className="text-white font-semibold text-base">Create Game</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
+        <View className="bg-background border-t border-[#E5E0D5] px-5 pt-3 pb-4 flex-row items-center justify-between">
+          <TouchableOpacity
+            onPress={() => router.push('/(game)/review-board' as any)}
+            disabled={selectedCount === 0}
+          >
+            <Text className={`text-base font-bold ${selectedCount > 0 ? 'text-navy' : 'text-gray-300'}`}>
+              {selectedCount} selected {selectedCount > 0 ? '›' : ''}
+            </Text>
+            {selectedCount > MAX_BOARD_SIZE && (
+              <Text className="text-gray-400 text-xs mt-0.5">24 will be randomly drawn</Text>
+            )}
+            {selectedCount > 0 && selectedCount <= MAX_BOARD_SIZE && (
+              <Text className="text-gray-400 text-xs mt-0.5">tap to review</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleHostStart}
+            disabled={!canStart || loading}
+            className="flex-row items-center gap-1.5 px-5 py-3 rounded-full"
+            style={{ backgroundColor: canStart ? '#7C3AED' : '#C4B5FD' }}
+            activeOpacity={0.85}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <Text className="text-white font-semibold text-sm">Create game</Text>
+                <ArrowRight size={15} color="white" />
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
 
-  // ---- GUEST / JOIN VIEW ----
+  // ---- JOIN VIEW ----
   return (
     <SafeAreaView className="flex-1 bg-background">
-      {/* Header */}
-      <View className="px-4 pt-4 pb-2 flex-row items-center gap-3">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-9 h-9 rounded-full bg-white border border-gray-200 items-center justify-center"
-          activeOpacity={0.7}
-        >
-          <Text className="text-navy text-base leading-none">‹</Text>
+      <View className="px-5 pt-2 pb-2">
+        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+          <ChevronLeft size={24} color="#1E1B4B" />
         </TouchableOpacity>
-        <Text className="text-navy text-xl font-bold">Join Game</Text>
       </View>
 
       <View className="flex-1 px-6 pt-8 items-center">
-        {/* Hero icon */}
-        <View className="w-20 h-20 rounded-2xl items-center justify-center mb-5" style={{ backgroundColor: '#FDE8EC' }}>
-          <Text className="text-4xl">🎯</Text>
-        </View>
-
         <Text className="text-navy text-2xl font-bold text-center mb-2">Got a code?</Text>
         <Text className="text-gray-500 text-sm text-center mb-8">
           Enter the 6-letter code your friend shared with you.
@@ -523,12 +402,13 @@ export default function Setup() {
         </View>
 
         <Button
-          title="→  Join Game"
+          title="Join Game"
           size="lg"
           loading={loading}
           disabled={joinCode.length < 6}
           onPress={handleJoin}
           className="mt-6 w-full"
+          icon={<ArrowRight size={16} color="white" />}
         />
       </View>
     </SafeAreaView>

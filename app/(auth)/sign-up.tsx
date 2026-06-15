@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Alert, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Alert, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { ChevronLeft, User, Mail, Lock } from 'lucide-react-native';
 import { Button } from '../../src/components/ui/Button';
+import { PillInput } from '../../src/components/ui/PillInput';
 import { supabase } from '../../src/lib/supabase';
 
 export default function SignUp() {
@@ -41,80 +42,62 @@ export default function SignUp() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-        <View className="flex-1 px-6 pt-4 pb-8">
-          {/* Back button */}
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-9 h-9 rounded-full bg-white border border-gray-200 items-center justify-center mb-8"
-            activeOpacity={0.7}
-          >
-            <Text className="text-navy text-base leading-none">‹</Text>
-          </TouchableOpacity>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="flex-1 px-6 pt-4 pb-8">
+            {/* Back */}
+            <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} className="mb-8">
+              <ChevronLeft size={24} color="#1E1B4B" />
+            </TouchableOpacity>
 
-          {/* Title */}
-          <Text className="text-navy text-3xl font-bold mb-1">Create your account</Text>
-          <Text className="text-gray-500 text-sm mb-8">Save your stats, build packs, and play with friends.</Text>
+            {/* Title */}
+            <Text className="text-navy text-3xl font-bold mb-1">Create your account</Text>
+            <Text className="text-gray-500 text-sm mb-8">Save your stats, build packs, and play with friends.</Text>
 
-          {/* Form */}
-          <View className="gap-4">
-            <View>
-              <Text className="text-navy text-sm font-medium mb-1.5">Display Name</Text>
-              <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4 py-3.5 gap-3">
-                <Ionicons name="person-outline" size={18} color="#6B7280" />
-                <TextInput
-                  className="flex-1 text-navy text-base"
-                  value={displayName}
-                  onChangeText={setDisplayName}
-                  autoCapitalize="words"
-                  placeholderTextColor="#9CA3AF"
-                  placeholder="What should friends call you?"
-                />
-              </View>
-            </View>
+            {/* Form */}
+            <PillInput
+              icon={<User size={18} color="#1E1B4B" />}
+              placeholder="Display Name"
+              value={displayName}
+              onChangeText={setDisplayName}
+              autoCapitalize="words"
+              autoComplete="name"
+            />
+            <PillInput
+              icon={<Mail size={18} color="#1E1B4B" />}
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoComplete="email"
+            />
+            <PillInput
+              icon={<Lock size={18} color="#1E1B4B" />}
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureToggle
+              autoComplete="new-password"
+            />
 
-            <View>
-              <Text className="text-navy text-sm font-medium mb-1.5">Email</Text>
-              <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4 py-3.5 gap-3">
-                <Ionicons name="mail-outline" size={18} color="#6B7280" />
-                <TextInput
-                  className="flex-1 text-navy text-base"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  placeholderTextColor="#9CA3AF"
-                  placeholder="you@email.com"
-                />
-              </View>
-            </View>
-
-            <View>
-              <Text className="text-navy text-sm font-medium mb-1.5">Password</Text>
-              <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4 py-3.5 gap-3">
-                <Ionicons name="lock-closed-outline" size={18} color="#6B7280" />
-                <TextInput
-                  className="flex-1 text-navy text-base"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  autoComplete="new-password"
-                  placeholderTextColor="#9CA3AF"
-                  placeholder="Min 8 characters"
-                />
-              </View>
-            </View>
+            <View className="flex-1" />
 
             <Button
-              title="→  Create Account"
+              title="Create Account"
               size="lg"
               loading={loading}
               onPress={handleSignUp}
-              className="mt-2"
+              className="mb-4"
             />
 
-            <View className="flex-row justify-center gap-1 mt-2">
+            <View className="flex-row justify-center gap-1">
               <Text className="text-gray-500 text-sm">Already have an account?</Text>
               <Text
                 className="text-primary-600 text-sm font-semibold"
@@ -124,8 +107,8 @@ export default function SignUp() {
               </Text>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

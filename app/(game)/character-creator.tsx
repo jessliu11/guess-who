@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { ChevronLeft, Camera, UserRound, X, Check } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { useAuth } from '../../src/hooks/useAuth';
@@ -24,6 +24,7 @@ import { getInitials, getColorForName } from '../../src/lib/avatar';
 import { FREE_CUSTOM_CHARACTER_LIMIT } from '../../src/constants/config';
 
 type QueueItem = { uri: string | null; name: string };
+type AddMode = 'photos' | 'name';
 
 async function compressImage(uri: string): Promise<string> {
   const result = await ImageManipulator.manipulateAsync(
@@ -43,6 +44,7 @@ export default function CharacterCreator() {
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
   const [existingCount, setExistingCount] = useState(0);
+  const [mode, setMode] = useState<AddMode>('photos');
 
   useEffect(() => {
     if (user && !isPremium) {
@@ -50,21 +52,25 @@ export default function CharacterCreator() {
     }
   }, [user, isPremium]);
 
+  const totalSlots = isPremium ? Infinity : FREE_CUSTOM_CHARACTER_LIMIT;
   const remainingSlots = isPremium ? Infinity : Math.max(0, FREE_CUSTOM_CHARACTER_LIMIT - existingCount);
   const atCap = !isPremium && remainingSlots <= 0;
 
-  const pickFromLibrary = async () => {
-    if (atCap) {
-      Alert.alert(
-        'Character limit reached',
-        `Free accounts can save up to ${FREE_CUSTOM_CHARACTER_LIMIT} custom characters. Upgrade to Pro for unlimited uploads.`,
-        [
-          { text: 'Not now', style: 'cancel' },
-          { text: 'Upgrade to Pro', onPress: () => router.push('/paywall') },
-        ],
-      );
-      return;
-    }
+  const checkCap = () => {
+    if (!atCap) return true;
+    Alert.alert(
+      'Character limit reached',
+      `Free accounts can save up to ${FREE_CUSTOM_CHARACTER_LIMIT} custom characters. Upgrade to Pro for unlimited.`,
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Upgrade to Pro', onPress: () => router.push('/paywall') },
+      ],
+    );
+    return false;
+  };
+
+  const handleAddPhotos = async () => {
+    if (!checkCap()) return;
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission needed', 'Allow access to your photo library to add character photos.');
@@ -84,19 +90,15 @@ export default function CharacterCreator() {
     }
   };
 
-  const addByName = () => {
-    if (atCap) {
-      Alert.alert(
-        'Character limit reached',
-        `Free accounts can save up to ${FREE_CUSTOM_CHARACTER_LIMIT} custom characters. Upgrade to Pro for unlimited uploads.`,
-        [
-          { text: 'Not now', style: 'cancel' },
-          { text: 'Upgrade to Pro', onPress: () => router.push('/paywall') },
-        ],
-      );
-      return;
-    }
+  const handleAddByName = () => {
+    if (!checkCap()) return;
     setQueue((prev) => [...prev, { uri: null, name: '' }]);
+  };
+
+  const onModePress = (next: AddMode) => {
+    setMode(next);
+    if (next === 'photos') handleAddPhotos();
+    else handleAddByName();
   };
 
   const updateName = (index: number, name: string) => {
@@ -107,10 +109,17 @@ export default function CharacterCreator() {
     setQueue((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSaveAll = async () => {
-    if (!user) return;
+  const namedItems = queue.filter((item) => item.name.trim().length > 0);
+  const namedCount = namedItems.length;
+  const unnamedCount = queue.length - namedCount;
+  const canSave = namedCount > 0 && !saving;
+
+  const handleSave = async () => {
+    if (!user || !canSave) return;
+    // Only save named items — discard unnamed
+    const toSave = queue.filter((item) => item.name.trim().length > 0);
     setSaving(true);
-    setProgress({ current: 0, total: queue.length });
+    setProgress({ current: 0, total: toSave.length });
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -123,170 +132,142 @@ export default function CharacterCreator() {
     const failedIndices: number[] = [];
     let completed = 0;
     let nextIndex = 0;
-    const snapshot = [...queue];
 
     async function worker() {
-      while (nextIndex < snapshot.length) {
+      while (nextIndex < toSave.length) {
         const i = nextIndex++;
         try {
-          const uri = snapshot[i].uri;
+          const uri = toSave[i].uri;
           const compressedUri = uri ? await compressImage(uri) : null;
-          await createCustomCharacter(user!.id, snapshot[i].name, compressedUri, session);
+          await createCustomCharacter(user!.id, toSave[i].name, compressedUri, session);
         } catch {
           failedIndices.push(i);
         }
         completed++;
-        setProgress({ current: completed, total: snapshot.length });
+        setProgress({ current: completed, total: toSave.length });
       }
     }
 
-    await Promise.all(Array.from({ length: Math.min(3, snapshot.length) }, worker));
+    await Promise.all(Array.from({ length: Math.min(3, toSave.length) }, worker));
 
     setSaving(false);
     setProgress(null);
     if (failedIndices.length > 0) {
-      setQueue((prev) => prev.filter((_, i) => failedIndices.includes(i)));
       Alert.alert('Some failed', `${failedIndices.length} character(s) could not be saved. Try again.`);
     } else {
       router.back();
     }
   };
 
-  const namedCount = queue.filter((item) => item.name.trim().length > 0).length;
-  const canSave = queue.length > 0 && namedCount === queue.length && !saving;
+  const slotsLabel = isPremium
+    ? undefined
+    : `${remainingSlots} of your ${totalSlots} slots left`;
 
   return (
     <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
-      <View className="px-4 pt-4 pb-2 flex-row items-center gap-3">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-9 h-9 rounded-full bg-white border border-gray-200 items-center justify-center"
-          activeOpacity={0.7}
-        >
-          <Text className="text-navy text-base leading-none">‹</Text>
+      <View className="px-5 pt-2 pb-2">
+        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+          <ChevronLeft size={24} color="#1E1B4B" />
         </TouchableOpacity>
-        <View>
-          <Text className="text-navy text-xl font-bold">Add Characters</Text>
-          {isPremium ? (
-            <Text className="text-gray-400 text-xs">Up to 20 photos · name each one</Text>
-          ) : (
-            <Text className="text-gray-400 text-xs">
-              {existingCount} of {FREE_CUSTOM_CHARACTER_LIMIT} slots used
-            </Text>
-          )}
-        </View>
       </View>
 
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
       >
         <ScrollView
-          className="flex-1 px-4 pt-2"
+          className="flex-1 px-5"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Pick photos card — always visible at top */}
-          <TouchableOpacity
-            onPress={pickFromLibrary}
-            activeOpacity={0.8}
-            className="flex-row items-center rounded-2xl p-4 mb-3"
-            style={{ borderWidth: 2, borderColor: '#7C3AED', borderStyle: 'dashed', backgroundColor: '#F5F3FF' }}
-          >
-            <View className="w-11 h-11 rounded-xl bg-primary-600 items-center justify-center mr-3">
-              <Ionicons name="images-outline" size={20} color="white" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-primary-700 font-semibold text-sm">Pick photos from library</Text>
-              <Text className="text-primary-500 text-xs mt-0.5">Select up to 20 at once</Text>
-            </View>
-            <Ionicons name="add" size={22} color="#7C3AED" />
-          </TouchableOpacity>
+          {/* Title */}
+          <Text className="text-navy text-2xl font-bold mt-1">Add characters</Text>
+          {slotsLabel && (
+            <Text className="text-gray-400 text-sm mt-0.5 mb-4">{slotsLabel}</Text>
+          )}
 
-          {/* Name-only card */}
-          <TouchableOpacity
-            onPress={addByName}
-            activeOpacity={0.8}
-            className="flex-row items-center rounded-2xl p-4 mb-4"
-            style={{ borderWidth: 2, borderColor: '#7C3AED', borderStyle: 'dashed', backgroundColor: '#F5F3FF' }}
-          >
-            <View className="w-11 h-11 rounded-xl bg-primary-600 items-center justify-center mr-3">
-              <Ionicons name="person-add-outline" size={20} color="white" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-primary-700 font-semibold text-sm">Add character by name</Text>
-              <Text className="text-primary-500 text-xs mt-0.5">Quick add — no photo needed</Text>
-            </View>
-            <Ionicons name="add" size={22} color="#7C3AED" />
-          </TouchableOpacity>
+          {/* Mode toggle */}
+          <View className="flex-row gap-2 mb-5 mt-3">
+            <TouchableOpacity
+              onPress={() => onModePress('photos')}
+              className={`flex-row items-center gap-2 px-4 py-2.5 rounded-full ${mode === 'photos' ? 'bg-primary-600' : 'bg-white border border-[#E5E0D5]'}`}
+            >
+              <Camera size={15} color={mode === 'photos' ? 'white' : '#6B7280'} />
+              <Text className={`text-sm font-semibold ${mode === 'photos' ? 'text-white' : 'text-gray-500'}`}>
+                Add photos
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => onModePress('name')}
+              className={`flex-row items-center gap-2 px-4 py-2.5 rounded-full ${mode === 'name' ? 'bg-primary-600' : 'bg-white border border-[#E5E0D5]'}`}
+            >
+              <UserRound size={15} color={mode === 'name' ? 'white' : '#6B7280'} />
+              <Text className={`text-sm font-semibold ${mode === 'name' ? 'text-white' : 'text-gray-500'}`}>
+                Add by name
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Queue */}
-          {queue.map((item, index) => {
-            const hasName = item.name.trim().length > 0;
-            return (
-              <View
-                key={`${item.uri ?? 'no-photo'}-${index}`}
-                className="flex-row items-center gap-3 mb-3 bg-white rounded-2xl p-3 border border-gray-200"
-              >
-                {item.uri ? (
-                  <Image
-                    source={{ uri: item.uri }}
-                    style={{ width: 56, height: 56, borderRadius: 12 }}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 12,
-                      backgroundColor: getColorForName(item.name),
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Text style={{ color: 'white', fontWeight: '700', fontSize: 20 }}>
-                      {getInitials(item.name)}
-                    </Text>
-                  </View>
-                )}
-                <TextInput
-                  value={item.name}
-                  onChangeText={(text) => updateName(index, text)}
-                  placeholder="Name this character"
-                  placeholderTextColor="#9CA3AF"
-                  maxLength={40}
-                  returnKeyType="next"
-                  style={{
-                    flex: 1,
-                    backgroundColor: hasName ? '#FAF8F2' : '#FFF5F5',
-                    borderColor: hasName ? '#E5E0D5' : '#EF4444',
-                    borderWidth: 1.5,
-                    borderRadius: 10,
-                    paddingHorizontal: 12,
-                    paddingVertical: 10,
-                    color: '#1E1B4B',
-                    fontSize: 15,
-                  }}
-                />
-                <TouchableOpacity
-                  onPress={() => removeItem(index)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  className="w-9 h-9 rounded-xl items-center justify-center"
-                  style={{ backgroundColor: hasName ? '#F3F4F6' : '#FEE2E2' }}
+          {queue.length > 0 && (
+            <View className="bg-white rounded-2xl border border-[#E5E0D5] overflow-hidden">
+              {queue.map((item, index) => (
+                <View
+                  key={`${item.uri ?? 'no-photo'}-${index}`}
+                  className="flex-row items-center px-3 py-2.5 border-b border-[#F0EDE6]"
                 >
-                  <Ionicons name="trash-outline" size={16} color={hasName ? '#9CA3AF' : '#EF4444'} />
-                </TouchableOpacity>
-              </View>
-            );
-          })}
+                  {/* Thumbnail / Initials */}
+                  {item.uri ? (
+                    <Image
+                      source={{ uri: item.uri }}
+                      style={{ width: 44, height: 44, borderRadius: 10, marginRight: 12 }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 10,
+                        marginRight: 12,
+                        backgroundColor: getColorForName(item.name || '?'),
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text style={{ color: 'white', fontWeight: '700', fontSize: 16 }}>
+                        {item.name ? getInitials(item.name) : '?'}
+                      </Text>
+                    </View>
+                  )}
+                  {/* Name input */}
+                  <TextInput
+                    value={item.name}
+                    onChangeText={(text) => updateName(index, text)}
+                    placeholder="Name this character"
+                    placeholderTextColor="#9CA3AF"
+                    maxLength={40}
+                    returnKeyType="next"
+                    className="flex-1 text-navy text-sm font-sans"
+                  />
+                  {/* Remove */}
+                  <TouchableOpacity
+                    onPress={() => removeItem(index)}
+                    hitSlop={8}
+                    className="ml-2"
+                  >
+                    <X size={18} color="#9CA3AF" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
 
           {queue.length === 0 && (
-            <View className="items-center py-8 gap-2">
+            <View className="items-center py-10">
               <Text className="text-gray-400 text-sm text-center">
-                No photos yet — tap above to add characters
+                Use the buttons above to add characters
               </Text>
             </View>
           )}
@@ -295,41 +276,45 @@ export default function CharacterCreator() {
         </ScrollView>
 
         {/* Sticky footer */}
-        <View className="bg-background border-t border-gray-200 px-4 pt-3 pb-4 flex-row items-center justify-between">
-          <View>
-            {saving && progress ? (
-              <Text className="text-navy font-semibold text-base">
-                Saved {progress.current} of {progress.total}…
-              </Text>
-            ) : (
-              <>
-                <Text className="text-navy font-semibold text-base">
-                  {namedCount} of {queue.length} named
+        {queue.length > 0 && (
+          <View className="bg-background border-t border-[#E5E0D5] px-5 pt-3 pb-4 flex-row items-center justify-between">
+            <View className="flex-1 mr-3">
+              {saving && progress ? (
+                <Text className="text-navy font-semibold text-sm">
+                  Saved {progress.current} of {progress.total}…
                 </Text>
-                <Text className="text-gray-400 text-xs">
-                  {canSave ? 'Ready to save!' : 'Name each character to save'}
-                </Text>
-              </>
-            )}
-          </View>
+              ) : (
+                <>
+                  <Text className="text-navy font-semibold text-sm">
+                    {namedCount} of {queue.length} named
+                  </Text>
+                  {unnamedCount > 0 && (
+                    <Text className="text-gray-400 text-xs mt-0.5">
+                      {unnamedCount} still need a name — they&apos;ll stay here
+                    </Text>
+                  )}
+                </>
+              )}
+            </View>
 
-          <TouchableOpacity
-            onPress={handleSaveAll}
-            disabled={!canSave}
-            className="flex-row items-center gap-2 px-6 py-3.5 rounded-2xl"
-            style={{ backgroundColor: canSave ? '#7C3AED' : '#C4B5FD' }}
-            activeOpacity={0.85}
-          >
-            {saving ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <>
-                <Ionicons name="checkmark" size={18} color="white" />
-                <Text className="text-white font-semibold text-base">Save All</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={!canSave}
+              className="flex-row items-center gap-1.5 px-5 py-3 rounded-full"
+              style={{ backgroundColor: canSave ? '#7C3AED' : '#C4B5FD' }}
+              activeOpacity={0.85}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <>
+                  <Check size={16} color="white" strokeWidth={2.5} />
+                  <Text className="text-white font-semibold text-sm">Save {namedCount}</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
