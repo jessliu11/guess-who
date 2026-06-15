@@ -164,11 +164,11 @@ export default function MyCharacters() {
               {isDeleteMode && (
                 <TouchableOpacity
                   onPress={() => setDeleteTarget(character)}
-                  style={{ position: 'absolute', top: -5, right: -5, zIndex: 10 }}
+                  style={{ position: 'absolute', top: -6, right: -6, zIndex: 10 }}
                   hitSlop={6}
                 >
-                  <View className="w-5 h-5 rounded-full bg-primary-600 items-center justify-center border-2 border-background">
-                    <X size={10} color="white" strokeWidth={3} />
+                  <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: '#1E1B4B', alignItems: 'center', justifyContent: 'center' }}>
+                    <X size={11} color="white" strokeWidth={2.5} />
                   </View>
                 </TouchableOpacity>
               )}

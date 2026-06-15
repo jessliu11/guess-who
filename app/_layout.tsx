@@ -83,12 +83,11 @@ export default function RootLayout() {
     Poppins_700Bold,
   });
 
-  useEffect(() => {
-    if (fontsLoaded) {
-      if (!(Text as any).defaultProps) (Text as any).defaultProps = {};
-      (Text as any).defaultProps.style = { fontFamily: 'Poppins_400Regular' };
-    }
-  }, [fontsLoaded]);
+  if (!fontsLoaded) return null;
+
+  // Apply synchronously before any child mounts so every Text gets Poppins from the first render.
+  if (!(Text as any).defaultProps) (Text as any).defaultProps = {};
+  (Text as any).defaultProps.style = { fontFamily: 'Poppins_400Regular' };
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

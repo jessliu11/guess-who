@@ -286,8 +286,8 @@ export default function Setup() {
                 className="rounded-2xl border px-4 py-3.5 flex-row items-center mb-5"
                 style={{ backgroundColor: mySelectedCount > 0 ? '#EDE9FE' : 'white', borderColor: mySelectedCount > 0 ? '#C4B5FD' : '#E5E0D5' }}
               >
-                {/* Thumbnail cluster */}
-                <View className="flex-row mr-3" style={{ width: 60 }}>
+                {/* Thumbnail cluster — fixed width prevents overflow into text */}
+                <View style={{ width: 72, marginRight: 12, flexDirection: 'row', alignItems: 'center' }}>
                   {myCharPreviewUrls.length > 0
                     ? myCharPreviewUrls.map((url, i) => (
                         <View key={i} className="w-9 h-9 rounded-full overflow-hidden border-2 border-white" style={{ marginLeft: i === 0 ? 0 : -10 }}>

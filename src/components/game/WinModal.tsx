@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Modal } from 'react-native';
+import { Trophy, Frown } from 'lucide-react-native';
 import { Button } from '../ui/Button';
 import { CharacterImage } from './CharacterImage';
 import type { Character, PlayerRole } from '../../types/game.types';
@@ -27,7 +28,15 @@ export function WinModal({
     <Modal visible={visible} transparent animationType="fade">
       <View className="flex-1 bg-black/60 items-center justify-center px-6">
         <View className="bg-white rounded-3xl p-8 w-full items-center border border-gray-200">
-          <Text className="text-5xl mb-2">{iWon ? '🏆' : '😔'}</Text>
+          <View
+            className="w-16 h-16 rounded-2xl items-center justify-center mb-3"
+            style={{ backgroundColor: iWon ? '#FEF3C7' : '#F3F4F6' }}
+          >
+            {iWon
+              ? <Trophy size={32} color="#D97706" strokeWidth={1.5} />
+              : <Frown size={32} color="#9CA3AF" strokeWidth={1.5} />
+            }
+          </View>
           <Text className={`text-3xl font-bold mb-1 ${iWon ? 'text-accent' : 'text-gray-500'}`}>
             {iWon ? 'You Win!' : 'You Lose!'}
           </Text>

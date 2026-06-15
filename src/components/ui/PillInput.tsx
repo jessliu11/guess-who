@@ -10,7 +10,8 @@ interface PillInputProps extends TextInputProps {
 }
 
 export function PillInput({ icon, secureToggle = false, secureTextEntry, ...props }: PillInputProps) {
-  const [hidden, setHidden] = useState(secureTextEntry ?? false);
+  // When secureToggle is enabled, always start hidden (password masked by default)
+  const [hidden, setHidden] = useState(secureToggle ? true : (secureTextEntry ?? false));
   const isSecure = secureToggle ? hidden : secureTextEntry;
 
   return (

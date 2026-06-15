@@ -19,7 +19,7 @@ const variantStyles: Record<string, { container: string; text: string }> = {
   primary:   { container: 'bg-primary-600 active:bg-primary-700', text: 'text-white font-semibold' },
   secondary: { container: 'bg-white border border-gray-200 active:bg-gray-50', text: 'text-navy font-semibold' },
   ghost:     { container: 'bg-transparent active:bg-primary-50', text: 'text-primary-600 font-semibold' },
-  danger:    { container: 'bg-transparent active:bg-red-50', text: 'text-danger font-semibold' },
+  danger:    { container: 'bg-white border border-danger active:bg-red-50', text: 'text-danger font-semibold' },
 };
 
 const sizeStyles: Record<string, { container: string; text: string }> = {

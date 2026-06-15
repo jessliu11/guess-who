@@ -159,20 +159,14 @@ export default function Packs() {
           </TouchableOpacity>
         </View>
 
-        {/* Filter chips — post-MVP, All is the only active state */}
-        <View className="flex-row gap-2 mb-5">
+        {/* Filter chips hidden — post-MVP scope */}
+        {false && <View className="flex-row gap-2 mb-5">
           {(['All', 'Who', 'Where'] as const).map((label) => (
-            <TouchableOpacity
-              key={label}
-              disabled={label !== 'All'}
-              className={`px-4 py-1.5 rounded-full border ${label === 'All' ? 'bg-primary-600 border-primary-600' : 'bg-white border-[#E5E0D5]'}`}
-            >
-              <Text className={`text-sm font-medium ${label === 'All' ? 'text-white' : 'text-gray-400'}`}>
-                {label}
-              </Text>
+            <TouchableOpacity key={label} disabled className="px-4 py-1.5 rounded-full border border-[#E5E0D5]">
+              <Text className="text-sm font-medium text-gray-400">{label}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </View>}
 
         {/* Yours section */}
         <Text className="text-navy text-sm font-semibold mb-2">Yours</Text>

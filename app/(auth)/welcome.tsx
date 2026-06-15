@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, Alert, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowRight } from 'lucide-react-native';
 import { supabase } from '../../src/lib/supabase';
 
 export default function Welcome() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [guestLoading, setGuestLoading] = useState(false);
 
   const handleGuest = async () => {
@@ -20,20 +21,29 @@ export default function Welcome() {
   };
 
   return (
-    <LinearGradient
-      colors={['#7C3AED', '#C026D3']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{ flex: 1 }}
-    >
-      <SafeAreaView style={{ flex: 1, paddingHorizontal: 24, paddingBottom: 32, paddingTop: 16 }}>
+    <View style={{ flex: 1 }}>
+      {/* Gradient covers the full screen including status bar and home indicator */}
+      <LinearGradient
+        colors={['#7C3AED', '#C026D3']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+
+      {/* Content respects safe area insets */}
+      <View style={{
+        flex: 1,
+        paddingTop: insets.top + 16,
+        paddingBottom: insets.bottom + 32,
+        paddingHorizontal: 24,
+      }}>
         {/* Logo / animation placeholder */}
         <View style={{ flex: 1 }} />
 
         {/* Actions */}
         <View style={{ gap: 12 }}>
           <TouchableOpacity
-            className="bg-white py-4 rounded-full items-center active:opacity-80"
+            className="bg-white py-4 rounded-full items-center"
             onPress={() => router.push('/(auth)/sign-up')}
             activeOpacity={0.85}
           >
@@ -61,7 +71,7 @@ export default function Welcome() {
             {!guestLoading && <ArrowRight size={14} color="white" />}
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
-    </LinearGradient>
+      </View>
+    </View>
   );
 }

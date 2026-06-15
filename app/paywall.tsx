@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Package, Wrench, Link, Shuffle, PlusCircle } from 'lucide-react-native';
+import { X, Package, Wrench, Link, Shuffle, PlusCircle, Star } from 'lucide-react-native';
 import { Button } from '../src/components/ui/Button';
 
 // NOTE: RevenueCat (react-native-purchases) requires an EAS Dev Build.
@@ -49,7 +49,7 @@ export default function Paywall() {
           </TouchableOpacity>
 
           <View className="w-16 h-16 rounded-2xl bg-accent items-center justify-center mb-4">
-            <Text className="text-3xl">⭐</Text>
+            <Star size={32} color="white" fill="white" strokeWidth={1.5} />
           </View>
           <Text className="text-white text-3xl font-bold text-center">Who, What, Where? Pro</Text>
           <Text className="text-white/75 text-sm text-center mt-2 max-w-xs">

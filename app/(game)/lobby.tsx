@@ -8,6 +8,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { CheckCircle2 } from 'lucide-react-native';
 import { ScreenHeader } from '../../src/components/layout/ScreenHeader';
 import { JoinCodeDisplay } from '../../src/components/ui/JoinCodeDisplay';
 import { Button } from '../../src/components/ui/Button';
@@ -136,7 +137,7 @@ export default function Lobby() {
           </>
         ) : (
           <View className="items-center gap-3">
-            <Text className="text-4xl mb-2">✅</Text>
+            <CheckCircle2 size={40} color="#22C55E" strokeWidth={1.5} style={{ marginBottom: 8 }} />
             <Text className="text-navy text-xl font-bold">You&apos;re In!</Text>
             <View className="flex-row items-center gap-3">
               <Animated.View style={dotStyle} className="w-3 h-3 rounded-full bg-amber-400" />
