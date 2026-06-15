@@ -37,11 +37,8 @@ export function WinModal({
               : <Frown size={32} color="#9CA3AF" strokeWidth={1.5} />
             }
           </View>
-          <Text className={`text-3xl font-bold mb-1 ${iWon ? 'text-accent' : 'text-gray-500'}`}>
-            {iWon ? 'You Win!' : 'You Lose!'}
-          </Text>
-          <Text className="text-gray-400 text-sm mb-6">
-            {iWon ? 'Great guess!' : 'Better luck next time!'}
+          <Text className={`text-3xl font-bold mb-6 ${iWon ? 'text-accent' : 'text-gray-500'}`}>
+            {iWon ? 'Great Guess!' : 'Better Luck Next Time!'}
           </Text>
 
           {opponentCharacter && (
