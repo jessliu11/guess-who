@@ -26,11 +26,26 @@ const SPEED = 80; // px/s
 
 export function WelcomeCardAnimation() {
   const { width: screenWidth } = useWindowDimensions();
-  const duration = ((screenWidth + TOTAL_CARDS_WIDTH) / SPEED) * 1000;
 
-  const translateX = useSharedValue(screenWidth);
+  // Start the strip centered on screen so cards are visible immediately.
+  // Cards that start left of screen-center are pre-eliminated.
+  const startX = screenWidth / 2 - TOTAL_CARDS_WIDTH / 2;
+  const totalTravel = -startX + TOTAL_CARDS_WIDTH; // distance from startX to -TOTAL_CARDS_WIDTH
+  const duration = (totalTravel / SPEED) * 1000;
+
+  const screenCenter = screenWidth / 2;
+
+  // Which cards start already past center (pre-eliminated on first render)
+  const preEliminated = new Set(
+    MOCK_CHARACTERS.map((_, i) => i).filter((i) => {
+      const cardCenter = startX + i * CARD_SLOT + 45;
+      return cardCenter < screenCenter && i < MOCK_CHARACTERS.length - 1;
+    })
+  );
+
+  const translateX = useSharedValue(startX);
   const [cycle, setCycle] = useState(0);
-  const [eliminatedSet, setEliminatedSet] = useState(new Set<number>());
+  const [eliminatedSet, setEliminatedSet] = useState<Set<number>>(preEliminated);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -42,19 +57,21 @@ export function WelcomeCardAnimation() {
     // Clear pending timers and reset state
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
-    setEliminatedSet(new Set());
+    setEliminatedSet(new Set(preEliminated));
     setSelectedIndex(null);
 
     // Snap scroll back to start (instant)
-    translateX.value = screenWidth;
+    translateX.value = startX;
 
-    const totalTravel = screenWidth + TOTAL_CARDS_WIDTH;
-
-    // Schedule elimination/selection for each card as it crosses screen center
+    // Schedule elimination/selection for cards not yet past center
     MOCK_CHARACTERS.forEach((_, i) => {
-      const cardCenterStart = screenWidth + i * CARD_SLOT + 45;
-      const travelToCenter = cardCenterStart - screenWidth / 2;
-      const delay = (travelToCenter / totalTravel) * duration;
+      const cardCenter = startX + i * CARD_SLOT + 45;
+      const travelToCenter = cardCenter - screenCenter;
+
+      // Skip cards that start already past center (pre-eliminated)
+      if (travelToCenter <= 0 && i < MOCK_CHARACTERS.length - 1) return;
+
+      const delay = Math.max((travelToCenter / totalTravel) * duration, 100);
 
       const t = setTimeout(() => {
         if (i < MOCK_CHARACTERS.length - 1) {
