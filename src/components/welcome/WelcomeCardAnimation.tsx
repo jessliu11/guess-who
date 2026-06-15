@@ -16,23 +16,23 @@ const NAME_POOL = [
   // Fictional
   'Harry', 'Hermione', 'Ron', 'Gandalf', 'Frodo', 'Katniss', 'Peeta', 'Daenerys',
   'Arya', 'Tyrion', 'Cersei', 'Sherlock', 'Watson', 'Elizabeth', 'Darcy', 'Romeo',
-  'Juliet', 'Hamlet', 'Ophelia', 'Atticus', 'Jay Gatsby', 'Huck Finn', 'Holden',
-  'Scarlett', 'Rhett', 'Eowyn', 'Legolas', 'Bilbo', 'Dumbledore', 'Voldemort',
+  'Juliet', 'Hamlet', 'Dracula', 'Bumblebee', 'Jay Gatsby', 'Barbie', 'Ken',
+  'Eren', 'Mikasa', 'Levi', 'Hulk', 'Iron Man', 'Dumbledore', 'Voldemort',
   // TV characters
   'Phoebe', 'Monica', 'Rachel', 'Ross', 'Chandler', 'Joey', 'Jesse', 'Walter',
-  'Skyler', 'Lorelai', 'Rory', 'Sookie', 'Luke', 'Michael', 'Dwight', 'Jim',
-  'Pam', 'Leslie', 'April', 'Ben', 'Fleabag', 'Ted Lasso', 'Nate', 'Keeley',
-  'Rebecca', 'Kimmy', 'Titus', 'Moira', 'David', 'Alexis', 'Patrick', 'Schitt',
+  'Skyler', 'Lorelai', 'Rory', 'Conrad', 'Belly', 'Michael', 'Dwight', 'Jim',
+  'Pam', 'Elena', 'Stefan', 'Damon', 'Serena', 'Blair', 'Nate', 'Dan',
+  'Scott', 'Stiles', 'Eleven', 'Mike', 'Will', 'Lara', 'Peter', 'Kitty',
   // Celebrities
-  'Beyoncé', 'Rihanna', 'Taylor', 'Billie', 'Ariana', 'Adele', 'Lizzo',
+  'Beyoncé', 'Rihanna', 'Taylor', 'Billie', 'Ariana', 'Adele', 'Harry',
   'Zendaya', 'Timothée', 'Sydney', 'Florence', 'Harry S', 'Dua Lipa', 'Olivia',
-  'Sabrina', 'Chappell', 'SZA', 'Gracie', 'Cardi B', 'Nicki', 'Doja',
+  'Sabrina', 'Chappell', 'SZA', 'Gracie', 'Cardi B', 'Anne', 'Tom',
   // Countries
   'France', 'Japan', 'Brazil', 'Kenya', 'Iceland', 'Peru', 'Morocco', 'Vietnam',
-  'Norway', 'Ghana', 'Egypt', 'Chile', 'Nepal', 'Croatia', 'Jordan', 'Senegal',
+  'Norway', 'Ghana', 'Egypt', 'Chile', 'Nepal', 'Korea', 'USA', 'China',
   // Historical / iconic
-  'Cleopatra', 'Einstein', 'Mozart', 'Frida', 'Picasso', 'Tesla', 'Darwin',
-  'Marie Curie', 'Socrates', 'Plato', 'Caesar', 'Napoleon', 'Joan', 'Lincoln',
+  'Cleopatra', 'Einstein', 'Mozart', 'Frida', 'Picasso', 'Hamilton', 'Darwin',
+  'Gandhi', 'Socrates', 'Plato', 'Caesar', 'Napoleon', 'Joan', 'Lincoln',
 ];
 
 function shuffle<T>(arr: T[]): T[] {
