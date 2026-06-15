@@ -36,15 +36,14 @@ export default function Welcome() {
         flex: 1,
         paddingTop: insets.top + 16,
         paddingBottom: insets.bottom + 32,
-        paddingHorizontal: 24,
       }}>
-        {/* Card conveyor animation */}
-        <View style={{ flex: 1, justifyContent: 'center' }}>
+        {/* Card conveyor animation — full width, fills available space */}
+        <View style={{ flex: 1 }}>
           <WelcomeCardAnimation />
         </View>
 
         {/* Actions */}
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: 12, paddingHorizontal: 24, paddingTop: 24 }}>
           <TouchableOpacity
             className="bg-white py-4 rounded-full items-center"
             onPress={() => router.push('/(auth)/sign-up')}

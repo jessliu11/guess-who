@@ -46,7 +46,7 @@ function shuffle<T>(arr: T[]): T[] {
 
 // ─── Single scrolling row ─────────────────────────────────────────────────────
 
-const CARD_SLOT = 82; // 72px (size="sm") + 10px margins
+const CARD_SLOT = 98; // 90px (size="md") + 8px margins
 
 interface RowProps {
   names: string[];
@@ -77,7 +77,7 @@ function CardRow({ names, speed }: RowProps) {
 
     const preEliminated = new Set(
       names.map((_, i) => i).filter(
-        (i) => startX + i * CARD_SLOT + 36 < screenCenter && i < names.length - 1,
+        (i) => startX + i * CARD_SLOT + 45 < screenCenter && i < names.length - 1,
       ),
     );
 
@@ -90,7 +90,7 @@ function CardRow({ names, speed }: RowProps) {
       translateX.value = startX;
 
       names.forEach((_, i) => {
-        const cardCenter = startX + i * CARD_SLOT + 36;
+        const cardCenter = startX + i * CARD_SLOT + 45;
         const travelToCenter = cardCenter - screenCenter;
         if (travelToCenter <= 0 && i < names.length - 1) return;
 
@@ -119,15 +119,15 @@ function CardRow({ names, speed }: RowProps) {
   }, [screenWidth]);
 
   return (
-    <View style={{ overflow: 'hidden', height: 100, width: '100%' }}>
+    <View style={{ overflow: 'hidden', height: 130, width: '100%' }}>
       <Animated.View
-        style={[{ flexDirection: 'row', position: 'absolute', top: 8 }, animatedStyle]}
+        style={[{ flexDirection: 'row', position: 'absolute', top: 12 }, animatedStyle]}
       >
         {names.map((name, i) => (
           <CharacterCard
             key={`${name}-${i}-${cycleKey}`}
             character={{ id: `${i}`, name, image_url: null, category_id: '', slug: '', is_active: true, sort_order: i } as Character}
-            size="sm"
+            size="md"
             eliminated={eliminatedSet.has(i)}
             selected={selectedIndex === i}
           />
@@ -140,9 +140,9 @@ function CardRow({ names, speed }: RowProps) {
 // ─── Multi-row export ─────────────────────────────────────────────────────────
 
 const ROW_CONFIGS = [
-  { count: 9, speed: 62 },
+  { count: 8, speed: 62 },
   { count: 6, speed: 95 },
-  { count: 8, speed: 74 },
+  { count: 7, speed: 74 },
 ];
 
 export function WelcomeCardAnimation() {
@@ -158,7 +158,7 @@ export function WelcomeCardAnimation() {
   }, []);
 
   return (
-    <View style={{ gap: 4 }}>
+    <View style={{ flex: 1, justifyContent: 'space-evenly' }}>
       {rows.map((row, i) => (
         <CardRow key={i} names={row.names} speed={row.speed} />
       ))}
