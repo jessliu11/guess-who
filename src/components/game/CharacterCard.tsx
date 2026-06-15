@@ -157,7 +157,7 @@ export function CharacterCard({
       onPress={onPress}
       disabled={!onPress}
       activeOpacity={0.75}
-      className={`${dim} m-1 rounded-xl overflow-hidden`}
+      className={`${dim} m-1 rounded-xl overflow-hidden bg-white`}
       style={borderStyle}
     >
       {cardFace}
