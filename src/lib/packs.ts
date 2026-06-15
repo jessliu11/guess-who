@@ -18,7 +18,7 @@ export async function getSystemPacksWithPreviews(): Promise<
   const packs = await getSystemPacks();
 
   // Collect the first 4 character IDs from every pack in one flat list
-  const allPreviewIds = [...new Set(packs.flatMap((p) => p.character_ids.slice(0, 4)))];
+  const allPreviewIds = [...new Set(packs.flatMap((p) => (p.character_ids ?? []).slice(0, 4)))];
 
   let charMap = new Map<string, { name: string; image_url: string | null }>();
   if (allPreviewIds.length > 0) {
@@ -33,7 +33,7 @@ export async function getSystemPacksWithPreviews(): Promise<
 
   return packs.map((pack) => ({
     ...pack,
-    preview_characters: pack.character_ids
+    preview_characters: (pack.character_ids ?? [])
       .slice(0, 4)
       .map((id) => charMap.get(id))
       .filter((c): c is PackPreviewCharacter => !!c),

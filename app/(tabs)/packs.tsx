@@ -24,7 +24,7 @@ function displayPackName(name: string) {
 }
 
 /** 2×2 collage using character data — images where available, initials otherwise */
-function PackCollage({ characters }: { characters: PackPreviewCharacter[] }) {
+function PackCollage({ characters = [] }: { characters: PackPreviewCharacter[] }) {
   return (
     <View className="w-full aspect-square flex-row flex-wrap">
       {[0, 1, 2, 3].map((i) => (
