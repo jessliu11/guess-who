@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowRight } from 'lucide-react-native';
 import { supabase } from '../../src/lib/supabase';
+import { WelcomeCardAnimation } from '../../src/components/welcome/WelcomeCardAnimation';
 
 export default function Welcome() {
   const router = useRouter();
@@ -37,8 +38,10 @@ export default function Welcome() {
         paddingBottom: insets.bottom + 32,
         paddingHorizontal: 24,
       }}>
-        {/* Logo / animation placeholder */}
-        <View style={{ flex: 1 }} />
+        {/* Card conveyor animation */}
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <WelcomeCardAnimation />
+        </View>
 
         {/* Actions */}
         <View style={{ gap: 12 }}>
