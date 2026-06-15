@@ -37,6 +37,16 @@ export default function Welcome() {
         paddingTop: insets.top + 16,
         paddingBottom: insets.bottom + 32,
       }}>
+        {/* Title */}
+        <View style={{ paddingHorizontal: 24, paddingBottom: 8, alignItems: 'center' }}>
+          <Text style={{ fontSize: 36, fontFamily: 'Poppins_700Bold', color: '#FFFFFF', textAlign: 'center' }}>
+            Who What Where?
+          </Text>
+          <Text style={{ fontSize: 15, fontFamily: 'Poppins_400Regular', color: 'rgba(255,255,255,0.75)', textAlign: 'center', marginTop: 4 }}>
+            The guessing game, reinvented.
+          </Text>
+        </View>
+
         {/* Card conveyor animation — full width, fills available space */}
         <View style={{ flex: 1 }}>
           <WelcomeCardAnimation />
