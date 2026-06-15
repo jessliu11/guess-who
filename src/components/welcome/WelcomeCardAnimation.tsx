@@ -155,9 +155,9 @@ function CardRow({ names, speed }: RowProps) {
 // ─── Multi-row export ─────────────────────────────────────────────────────────
 
 const ROW_CONFIGS = [
-  { count: 8, speed: 62 },
-  { count: 6, speed: 95 },
-  { count: 7, speed: 74 },
+  { count: 5,  speed: 58 },
+  { count: 12, speed: 90 },
+  { count: 7,  speed: 72 },
 ];
 
 export function WelcomeCardAnimation() {
