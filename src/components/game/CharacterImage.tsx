@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, ImageStyle, StyleProp, ViewStyle } from 'react-native';
 import { getInitials, getColorForName } from '../../lib/avatar';
 
@@ -21,7 +21,11 @@ export function CharacterImage({
   initialsFontSize = 28,
   resizeMode = 'cover',
 }: CharacterImageProps) {
-  if (imageUrl) {
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => { setImgError(false); }, [imageUrl]);
+
+  if (imageUrl && !imgError) {
     return (
       <Image
         source={{ uri: imageUrl }}
@@ -29,6 +33,7 @@ export function CharacterImage({
         className={className}
         blurRadius={blurRadius}
         resizeMode={resizeMode}
+        onError={() => setImgError(true)}
       />
     );
   }
