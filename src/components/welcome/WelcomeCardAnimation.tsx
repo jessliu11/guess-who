@@ -81,14 +81,7 @@ function CardRow({ names, speed }: RowProps) {
       ),
     );
 
-    const startCycle = () => {
-      timersRef.current.forEach(clearTimeout);
-      timersRef.current = [];
-      setEliminatedSet(new Set(preEliminated));
-      setSelectedIndex(null);
-      setCycleKey((k) => k + 1);
-      translateX.value = startX;
-
+    const scheduleAnimation = () => {
       names.forEach((_, i) => {
         const cardCenter = startX + i * CARD_SLOT + 45;
         const travelToCenter = cardCenter - screenCenter;
@@ -108,6 +101,24 @@ function CardRow({ names, speed }: RowProps) {
       translateX.value = withTiming(-totalCardsWidth, { duration, easing: Easing.linear }, () => {
         runOnJS(startCycleRef.current)();
       });
+    };
+
+    const startCycle = () => {
+      timersRef.current.forEach(clearTimeout);
+      timersRef.current = [];
+
+      // Reset state while cards are still off-screen (translateX = -totalCardsWidth).
+      // Remount happens invisibly; then snap into the start position and animate.
+      setEliminatedSet(new Set(preEliminated));
+      setSelectedIndex(null);
+      setCycleKey((k) => k + 1);
+
+      // Wait two frames for React to remount the cards off-screen, then snap & go.
+      const snapTimer = setTimeout(() => {
+        translateX.value = startX;
+        scheduleAnimation();
+      }, 32);
+      timersRef.current.push(snapTimer);
     };
 
     startCycleRef.current = startCycle;
