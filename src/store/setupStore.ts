@@ -1,18 +1,20 @@
 import { create } from 'zustand';
-import type { Character, CharacterPack } from '../types/game.types';
+import type { Character, CharacterPack, PackPreviewCharacter } from '../types/game.types';
+
+export type PackWithPreviews = CharacterPack & { preview_characters: PackPreviewCharacter[] };
 
 interface SetupStore {
   selectedIds: Set<string>;
   /** Cached characters per pack/source ID */
   packCharacters: Record<string, Character[]>;
   myCharacters: Character[];
-  packs: CharacterPack[];
+  packs: PackWithPreviews[];
   toggle: (id: string) => void;
   selectMany: (ids: string[]) => void;
   deselectMany: (ids: string[]) => void;
   setPackCharacters: (sourceId: string, chars: Character[]) => void;
   setMyCharacters: (chars: Character[]) => void;
-  setPacks: (packs: CharacterPack[]) => void;
+  setPacks: (packs: PackWithPreviews[]) => void;
   reset: () => void;
 }
 

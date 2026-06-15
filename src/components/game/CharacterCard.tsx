@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { TouchableOpacity, View, Text, Image } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -42,6 +42,8 @@ export function CharacterCard({
     ? { borderColor: 'transparent', borderWidth: 2 }
     : { borderColor: '#E5E0D5', borderWidth: 2 };
 
+  const [imgError, setImgError] = useState(false);
+
   const isFirstRender = useRef(true);
   const flipProgress = useSharedValue(eliminated ? 1 : 0);
 
@@ -82,11 +84,12 @@ export function CharacterCard({
       {/* Front face */}
       <Animated.View style={[{ flex: 1, borderRadius: 10, overflow: 'hidden' }, frontStyle]}>
         <View className="flex-1 bg-white">
-          {character.image_url ? (
+          {character.image_url && !imgError ? (
             <Image
               source={{ uri: character.image_url }}
               style={{ width: '100%', height: imgH }}
               resizeMode="cover"
+              onError={() => setImgError(true)}
             />
           ) : (
             <View
@@ -118,11 +121,12 @@ export function CharacterCard({
       {/* Back face — revealed when eliminated */}
       <Animated.View style={[{ flex: 1, borderRadius: 10, overflow: 'hidden' }, backStyle]}>
         <View className="flex-1 bg-white opacity-40">
-          {character.image_url ? (
+          {character.image_url && !imgError ? (
             <Image
               source={{ uri: character.image_url }}
               style={{ width: '100%', height: imgH }}
               resizeMode="cover"
+              onError={() => setImgError(true)}
             />
           ) : (
             <View

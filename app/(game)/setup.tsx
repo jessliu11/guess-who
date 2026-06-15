@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Image,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,12 +16,13 @@ import { CharacterImage } from '../../src/components/game/CharacterImage';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { FREE_CATEGORY_IDS } from '../../src/constants/config';
-import { getSystemPacks, getCharactersByIds } from '../../src/lib/packs';
+import { getSystemPacksWithPreviews, getCharactersByIds } from '../../src/lib/packs';
 import { getMyCustomCharacters } from '../../src/lib/characters';
 import { createSession, joinSession } from '../../src/lib/session';
 import { useGameStore } from '../../src/store/gameStore';
 import { useSetupStore } from '../../src/store/setupStore';
-import type { CharacterPack } from '../../src/types/game.types';
+import type { CharacterPack, PackPreviewCharacter } from '../../src/types/game.types';
+import type { PackWithPreviews } from '../../src/store/setupStore';
 
 const MIN_CHARACTERS = 4;
 const MAX_BOARD_SIZE = 24;
@@ -32,17 +32,23 @@ function displayPackName(name: string) {
   return name.replace(/\s*[-–—]+\s*(Standard|Extended)\s*$/i, '').trim();
 }
 
-/** 2×2 collage thumbnail */
-function PackCollage({ urls }: { urls: string[] }) {
-  const slots = [0, 1, 2, 3];
+/** 2×2 collage — image if available, colored initials otherwise */
+function PackCollage({ characters = [] }: { characters: PackPreviewCharacter[] }) {
   return (
     <View className="w-full aspect-square flex-row flex-wrap">
-      {slots.map((i) => (
+      {[0, 1, 2, 3].map((i) => (
         <View key={i} style={{ width: '50%', height: '50%' }}>
-          {urls[i]
-            ? <Image source={{ uri: urls[i] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-            : <View className="w-full h-full bg-gray-100" />
-          }
+          {characters[i] ? (
+            <CharacterImage
+              name={characters[i].name}
+              imageUrl={characters[i].image_url}
+              style={{ width: '100%', height: '100%' }}
+              initialsFontSize={22}
+              resizeMode="cover"
+            />
+          ) : (
+            <View className="w-full h-full bg-gray-100" />
+          )}
         </View>
       ))}
     </View>
@@ -77,13 +83,12 @@ function PackCard({
   onPressCircle,
   circleState,
 }: {
-  pack: CharacterPack;
+  pack: PackWithPreviews;
   isLocked: boolean;
   onPressBody: () => void;
   onPressCircle: () => void;
   circleState: 'none' | 'partial' | 'all';
 }) {
-  const previewUrls = pack.preview_image_urls ?? [];
   const selectedCount = useSetupStore((s) =>
     (s.packCharacters[pack.id] ?? []).filter((c) => s.selectedIds.has(c.id)).length
   );
@@ -96,7 +101,7 @@ function PackCard({
       style={{ flex: 1 }}
     >
       <View style={{ position: 'relative' }}>
-        <PackCollage urls={previewUrls} />
+        <PackCollage characters={pack.preview_characters} />
         {isLocked ? (
           <View className="absolute inset-0 items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}>
             <View className="bg-white/90 rounded-full p-2">
@@ -143,7 +148,7 @@ export default function Setup() {
     reset();
     if (isHost) {
       Promise.all([
-        getSystemPacks(),
+        getSystemPacksWithPreviews(),
         user ? getMyCustomCharacters(user.id) : Promise.resolve([]),
       ]).then(([sp, cc]) => {
         setPacks(sp);
@@ -258,10 +263,7 @@ export default function Setup() {
       return 'partial';
     };
 
-    const myCharPreviewUrls = myCharacters
-      .filter((c) => !!c.image_url)
-      .slice(0, 3)
-      .map((c) => c.image_url!);
+    const myCharPreviews = myCharacters.slice(0, 3);
 
     return (
       <SafeAreaView className="flex-1 bg-background">
@@ -286,20 +288,13 @@ export default function Setup() {
                 className="rounded-2xl border px-4 py-3.5 flex-row items-center mb-5"
                 style={{ backgroundColor: mySelectedCount > 0 ? '#EDE9FE' : 'white', borderColor: mySelectedCount > 0 ? '#C4B5FD' : '#E5E0D5' }}
               >
-                {/* Thumbnail cluster — fixed width prevents overflow into text */}
-                <View style={{ width: 72, marginRight: 12, flexDirection: 'row', alignItems: 'center' }}>
-                  {myCharPreviewUrls.length > 0
-                    ? myCharPreviewUrls.map((url, i) => (
-                        <View key={i} className="w-9 h-9 rounded-full overflow-hidden border-2 border-white" style={{ marginLeft: i === 0 ? 0 : -10 }}>
-                          <Image source={{ uri: url }} className="w-full h-full" resizeMode="cover" />
-                        </View>
-                      ))
-                    : myCharacters.slice(0, 3).map((c, i) => (
-                        <View key={c.id} className="w-9 h-9 rounded-full overflow-hidden border-2 border-white" style={{ marginLeft: i === 0 ? 0 : -10 }}>
-                          <CharacterImage name={c.name} imageUrl={null} style={{ width: '100%', height: '100%' }} initialsFontSize={10} />
-                        </View>
-                      ))
-                  }
+                {/* Thumbnail cluster */}
+                <View style={{ marginRight: 12, flexDirection: 'row', alignItems: 'center' }}>
+                  {myCharPreviews.map((c, i) => (
+                    <View key={c.id} className="w-9 h-9 rounded-full overflow-hidden border-2 border-white" style={{ marginLeft: i === 0 ? 0 : -10 }}>
+                      <CharacterImage name={c.name} imageUrl={c.image_url ?? null} style={{ width: '100%', height: '100%' }} initialsFontSize={10} />
+                    </View>
+                  ))}
                 </View>
                 <View className="flex-1">
                   <Text className="text-navy text-sm font-semibold">My characters</Text>

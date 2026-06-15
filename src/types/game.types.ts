@@ -24,6 +24,11 @@ export interface Character {
   sort_order: number;
 }
 
+export interface PackPreviewCharacter {
+  name: string;
+  image_url: string | null;
+}
+
 export interface CharacterPack {
   id: string;
   name: string;

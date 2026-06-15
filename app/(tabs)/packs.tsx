@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -13,24 +12,31 @@ import { Plus, Lock, ChevronRight, ArrowRight, Users } from 'lucide-react-native
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { useAuth } from '../../src/hooks/useAuth';
 import { FREE_CATEGORY_IDS } from '../../src/constants/config';
-import { getSystemPacks } from '../../src/lib/packs';
+import { getSystemPacksWithPreviews } from '../../src/lib/packs';
 import { getMyCustomCharacters } from '../../src/lib/characters';
 import { CharacterImage } from '../../src/components/game/CharacterImage';
-import type { CharacterPack, Character } from '../../src/types/game.types';
+import type { CharacterPack, Character, PackPreviewCharacter } from '../../src/types/game.types';
+
+type PackWithPreviews = CharacterPack & { preview_characters: PackPreviewCharacter[] };
 
 function displayPackName(name: string) {
   return name.replace(/\s*[-–—]+\s*(Standard|Extended)\s*$/i, '').trim();
 }
 
-/** 2×2 collage of the first 4 preview images for a pack card */
-function PackCollage({ urls }: { urls: string[] }) {
-  const slots = [0, 1, 2, 3];
+/** 2×2 collage using character data — images where available, initials otherwise */
+function PackCollage({ characters = [] }: { characters: PackPreviewCharacter[] }) {
   return (
     <View className="w-full aspect-square flex-row flex-wrap">
-      {slots.map((i) => (
+      {[0, 1, 2, 3].map((i) => (
         <View key={i} style={{ width: '50%', height: '50%' }}>
-          {urls[i] ? (
-            <Image source={{ uri: urls[i] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+          {characters[i] ? (
+            <CharacterImage
+              name={characters[i].name}
+              imageUrl={characters[i].image_url}
+              style={{ width: '100%', height: '100%' }}
+              initialsFontSize={22}
+              resizeMode="cover"
+            />
           ) : (
             <View className="w-full h-full bg-gray-100" />
           )}
@@ -46,12 +52,10 @@ function PackCard({
   isLocked,
   onPress,
 }: {
-  pack: CharacterPack;
+  pack: PackWithPreviews;
   isLocked: boolean;
   onPress: () => void;
 }) {
-  const previewUrls = pack.preview_image_urls ?? [];
-
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -60,7 +64,7 @@ function PackCard({
       style={{ flex: 1 }}
     >
       <View style={{ position: 'relative' }}>
-        <PackCollage urls={previewUrls} />
+        <PackCollage characters={pack.preview_characters} />
         {isLocked && (
           <View
             className="absolute inset-0 items-center justify-center"
@@ -89,14 +93,14 @@ export default function Packs() {
   const router = useRouter();
   const { isPremium } = useSubscription();
   const { user } = useAuth();
-  const [systemPacks, setSystemPacks] = useState<CharacterPack[]>([]);
+  const [systemPacks, setSystemPacks] = useState<PackWithPreviews[]>([]);
   const [customCharacters, setCustomCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     try {
       const [sp, cc] = await Promise.all([
-        getSystemPacks(),
+        getSystemPacksWithPreviews(),
         user ? getMyCustomCharacters(user.id) : Promise.resolve([]),
       ]);
       setSystemPacks(sp);
@@ -126,7 +130,6 @@ export default function Packs() {
 
   const isFreePack = (p: CharacterPack) => FREE_CATEGORY_IDS.includes(p.category_id ?? '');
 
-  // Deduplicate: show one pack per category (standard)
   const sortedPacks = [...systemPacks]
     .filter((p) => !p.requires_premium)
     .sort((a, b) => {
