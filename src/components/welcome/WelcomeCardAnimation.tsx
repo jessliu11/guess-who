@@ -58,6 +58,7 @@ function CardRow({ names, speed }: RowProps) {
 
   const totalCardsWidth = names.length * CARD_SLOT;
   const translateX = useSharedValue(0);
+  const opacity = useSharedValue(1);
   const [eliminatedSet, setEliminatedSet] = useState(new Set<number>());
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [cycleKey, setCycleKey] = useState(0);
@@ -67,6 +68,7 @@ function CardRow({ names, speed }: RowProps) {
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
+    opacity: opacity.value,
   }));
 
   useEffect(() => {
@@ -113,9 +115,11 @@ function CardRow({ names, speed }: RowProps) {
       setSelectedIndex(null);
       setCycleKey((k) => k + 1);
 
-      // Wait two frames for React to remount the cards off-screen, then snap & go.
+      // Wait two frames for React to remount the cards off-screen, then snap & fade in.
       const snapTimer = setTimeout(() => {
+        opacity.value = 0;
         translateX.value = startX;
+        opacity.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.ease) });
         scheduleAnimation();
       }, 32);
       timersRef.current.push(snapTimer);
