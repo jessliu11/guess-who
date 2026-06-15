@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { generateCode } from '../utils/joinCode';
-import type { CharacterPack, Character } from '../types/game.types';
+import type { CharacterPack, Character, PackPreviewCharacter } from '../types/game.types';
 
 export async function getSystemPacks(): Promise<CharacterPack[]> {
   const { data, error } = await supabase
@@ -10,6 +10,34 @@ export async function getSystemPacks(): Promise<CharacterPack[]> {
     .order('created_at');
   if (error) throw error;
   return data as CharacterPack[];
+}
+
+export async function getSystemPacksWithPreviews(): Promise<
+  (CharacterPack & { preview_characters: PackPreviewCharacter[] })[]
+> {
+  const packs = await getSystemPacks();
+
+  // Collect the first 4 character IDs from every pack in one flat list
+  const allPreviewIds = [...new Set(packs.flatMap((p) => p.character_ids.slice(0, 4)))];
+
+  let charMap = new Map<string, { name: string; image_url: string | null }>();
+  if (allPreviewIds.length > 0) {
+    const { data } = await supabase
+      .from('characters')
+      .select('id, name, image_url')
+      .in('id', allPreviewIds);
+    for (const c of data ?? []) {
+      charMap.set(c.id, { name: c.name, image_url: c.image_url });
+    }
+  }
+
+  return packs.map((pack) => ({
+    ...pack,
+    preview_characters: pack.character_ids
+      .slice(0, 4)
+      .map((id) => charMap.get(id))
+      .filter((c): c is PackPreviewCharacter => !!c),
+  }));
 }
 
 export async function getPackById(packId: string): Promise<CharacterPack | null> {
