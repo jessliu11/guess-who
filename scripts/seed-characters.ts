@@ -75,6 +75,7 @@ interface DbPack {
   id: string;
   share_code: string;
   name: string;
+  description: string | null;
   category_id: string | null;
   requires_premium: boolean;
   character_ids: string[];
@@ -242,7 +243,7 @@ async function main() {
   for (const c of jsonCategories) {
     const ex = dbPackByCode.get(c.packShareCode);
     if (!ex) packDiff.add.push(c);
-    else if (ex.name !== c.packName || ex.category_id !== c.id || ex.requires_premium !== c.requiresPremium) packDiff.update.push(c);
+    else if (ex.name !== c.packName || (ex.description ?? '') !== c.description || ex.category_id !== c.id || ex.requires_premium !== c.requiresPremium) packDiff.update.push(c);
   }
   if (!CATEGORY_FILTER) {
     for (const p of dbPacks) if (!jsonPackByCode.has(p.share_code)) packDiff.remove.push(p);
@@ -365,6 +366,7 @@ async function main() {
         {
           share_code: c.packShareCode,
           name: c.packName,
+          description: c.description,
           category_id: c.id,
           requires_premium: c.requiresPremium,
           is_system: true,

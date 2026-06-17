@@ -73,7 +73,7 @@ export default function PackDetail() {
         <View className="flex-row items-center gap-1.5 mt-1 mb-5">
           <Info size={13} color="#9CA3AF" />
           <Text className="text-gray-400 text-sm">
-            {pack.character_ids.length} characters
+            {pack.character_ids.length} characters{pack.description ? ` · ${pack.description}` : ''}
           </Text>
         </View>
 
