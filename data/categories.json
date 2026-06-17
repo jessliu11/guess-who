@@ -58,5 +58,45 @@
     "packShareCode": "LMRK",
     "packName": "Landmarks",
     "requiresPremium": false
+  },
+  {
+    "id": "tv-shows",
+    "label": "TV Shows",
+    "description": "Iconic TV shows across every genre and era",
+    "emoji": "📺",
+    "sortOrder": 7,
+    "packShareCode": "TVSHW",
+    "packName": "TV Shows",
+    "requiresPremium": false
+  },
+  {
+    "id": "movies",
+    "label": "Movies",
+    "description": "Iconic films across every genre and era",
+    "emoji": "🎬",
+    "sortOrder": 8,
+    "packShareCode": "MOVIE",
+    "packName": "Movies",
+    "requiresPremium": false
+  },
+  {
+    "id": "musicians",
+    "label": "Musicians",
+    "description": "Icons of music across every genre and generation",
+    "emoji": "🎵",
+    "sortOrder": 9,
+    "packShareCode": "MUSIC",
+    "packName": "Musicians",
+    "requiresPremium": false
+  },
+  {
+    "id": "actors",
+    "label": "Actors",
+    "description": "Hollywood's biggest stars across every era",
+    "emoji": "🎭",
+    "sortOrder": 10,
+    "packShareCode": "ACTOR",
+    "packName": "Actors",
+    "requiresPremium": false
   }
 ]
