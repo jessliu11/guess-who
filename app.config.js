@@ -2,7 +2,7 @@ export default ({ config }) => ({
   ...config,
   name: 'Who, What, Where?',
   slug: 'guess-who-app',
-  version: '1.0.0',
+  version: '1.1.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
   scheme: 'guesswho',
