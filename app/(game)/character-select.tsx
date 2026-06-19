@@ -19,6 +19,7 @@ import { getCharactersByIds } from '../../src/lib/packs';
 import { setCharacter, getSessionById } from '../../src/lib/session';
 import { useGameStore } from '../../src/store/gameStore';
 import { supabase } from '../../src/lib/supabase';
+import { LOADING_TIMEOUT_MS } from '../../src/constants/config';
 import type { Character, GameSession } from '../../src/types/game.types';
 
 export default function CharacterSelect() {
@@ -31,6 +32,7 @@ export default function CharacterSelect() {
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [opponentLeftVisible, setOpponentLeftVisible] = useState(false);
 
   useEffect(() => {
@@ -44,16 +46,21 @@ export default function CharacterSelect() {
     };
 
     const init = async () => {
-      const s = await getSessionById(sessionId);
-      if (!s) return;
-      setSession(s);
-      if (s.status === 'active') { goToBoard(); return; }
-      const chars = await getCharactersByIds(s.character_pool);
-      const poolOrder = s.character_pool;
-      chars.sort((a, b) => poolOrder.indexOf(a.id) - poolOrder.indexOf(b.id));
-      setLocalChars(chars);
-      setCharacters(chars);
-      setLoading(false);
+      try {
+        const s = await getSessionById(sessionId);
+        if (!s) { setLoadError(true); return; }
+        setSession(s);
+        if (s.status === 'active') { goToBoard(); return; }
+        const chars = await getCharactersByIds(s.character_pool);
+        const poolOrder = s.character_pool;
+        chars.sort((a, b) => poolOrder.indexOf(a.id) - poolOrder.indexOf(b.id));
+        setLocalChars(chars);
+        setCharacters(chars);
+      } catch {
+        setLoadError(true);
+      } finally {
+        setLoading(false);
+      }
     };
     init();
 
@@ -95,6 +102,13 @@ export default function CharacterSelect() {
     };
   }, [sessionId]);
 
+  // Loading timeout — show error if init hangs
+  useEffect(() => {
+    if (!loading) return;
+    const t = setTimeout(() => setLoadError(true), LOADING_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [loading]);
+
   const handleConfirm = async () => {
     if (!selected || !sessionId || !myRole) return;
     setConfirming(true);
@@ -107,6 +121,18 @@ export default function CharacterSelect() {
       setConfirming(false);
     }
   };
+
+  if (loadError) {
+    return (
+      <SafeAreaView className="flex-1 bg-background items-center justify-center px-6 gap-4">
+        <Text className="text-navy text-lg font-bold text-center">Session unavailable</Text>
+        <Text className="text-gray-500 text-sm text-center">
+          This game session is no longer available. Please return home and try again.
+        </Text>
+        <Button title="Go Home" onPress={() => { clearGame(); router.replace('/(tabs)/home'); }} />
+      </SafeAreaView>
+    );
+  }
 
   if (loading) {
     return (

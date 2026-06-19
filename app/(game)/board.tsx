@@ -24,6 +24,7 @@ import { useGameStore } from '../../src/store/gameStore';
 import { useRealtimeGame } from '../../src/hooks/useRealtimeGame';
 import { getCharactersByIds } from '../../src/lib/packs';
 import { getSessionById, endTurn, submitGuess, abandonSession } from '../../src/lib/session';
+import { LOADING_TIMEOUT_MS } from '../../src/constants/config';
 import type { Character, GameSession } from '../../src/types/game.types';
 
 export default function Board() {
@@ -44,6 +45,7 @@ export default function Board() {
   } = useGameStore();
 
   const [loading, setLoading] = useState(true);
+  const [initError, setInitError] = useState(false);
   const [endingTurn, setEndingTurn] = useState(false);
   const [guessModalVisible, setGuessModalVisible] = useState(false);
   const [guessSelected, setGuessSelected] = useState<Character | null>(null);
@@ -54,25 +56,45 @@ export default function Board() {
   const [opponentLeftVisible, setOpponentLeftVisible] = useState(false);
   const leftByMe = useRef(false);
 
+  const handleExpired = () => {
+    Alert.alert(
+      'Session Expired',
+      'This game session has expired. Please start a new game.',
+      [{ text: 'OK', onPress: () => { clearGame(); router.replace('/(tabs)/home'); } }],
+    );
+  };
+
   // Attach realtime
-  useRealtimeGame(sessionId ?? null);
+  useRealtimeGame(sessionId ?? null, handleExpired);
 
   useEffect(() => {
     if (!sessionId) return;
     const init = async () => {
-      const s = await getSessionById(sessionId);
-      if (!s) return;
-      setSession(s);
-      seedMyEliminated(s);
-      const chars = await getCharactersByIds(s.character_pool);
-      chars.sort(
-        (a, b) => s.character_pool.indexOf(a.id) - s.character_pool.indexOf(b.id),
-      );
-      setCharacters(chars);
-      setLoading(false);
+      try {
+        const s = await getSessionById(sessionId);
+        if (!s) { setInitError(true); return; }
+        setSession(s);
+        seedMyEliminated(s);
+        const chars = await getCharactersByIds(s.character_pool);
+        chars.sort(
+          (a, b) => s.character_pool.indexOf(a.id) - s.character_pool.indexOf(b.id),
+        );
+        setCharacters(chars);
+      } catch {
+        setInitError(true);
+      } finally {
+        setLoading(false);
+      }
     };
     init();
   }, [sessionId]);
+
+  // Loading timeout — show error if init hangs
+  useEffect(() => {
+    if (!loading) return;
+    const t = setTimeout(() => setInitError(true), LOADING_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [loading]);
 
   // Show win modal when game finishes, or opponent-left modal when abandoned by other player
   useEffect(() => {
@@ -131,6 +153,18 @@ export default function Board() {
       setSubmittingGuess(false);
     }
   };
+
+  if (initError) {
+    return (
+      <SafeAreaView className="flex-1 bg-background items-center justify-center px-6 gap-4">
+        <Text className="text-navy text-lg font-bold text-center">Couldn&apos;t load game</Text>
+        <Text className="text-gray-500 text-sm text-center">
+          Something went wrong loading the game. Please return home and try again.
+        </Text>
+        <Button title="Go Home" onPress={() => { clearGame(); router.replace('/(tabs)/home'); }} />
+      </SafeAreaView>
+    );
+  }
 
   if (loading || !session) {
     return (
