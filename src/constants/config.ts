@@ -9,7 +9,9 @@ export const DEV_UNLOCK_ALL_PACKS = true;
 export const PREMIUM_ENTITLEMENT_ID = 'premium';
 export const JOIN_CODE_LENGTH = 6;
 export const PACK_CODE_LENGTH = 6;
+// Applies to 'waiting' sessions only — active games are extended to 24 h by a DB trigger.
 export const SESSION_EXPIRY_HOURS = 2;
+export const LOADING_TIMEOUT_MS = 15_000;
 export const STANDARD_PACK_SIZE = 24;
 export const EXTENDED_PACK_MIN = 20;
 export const EXTENDED_PACK_MAX = 24;

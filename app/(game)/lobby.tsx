@@ -16,6 +16,7 @@ import { ConfirmModal } from '../../src/components/ui/ConfirmModal';
 import { getSessionById, abandonSession } from '../../src/lib/session';
 import { useGameStore } from '../../src/store/gameStore';
 import { supabase } from '../../src/lib/supabase';
+import { LOADING_TIMEOUT_MS } from '../../src/constants/config';
 import type { GameSession } from '../../src/types/game.types';
 
 export default function Lobby() {
@@ -26,6 +27,7 @@ export default function Lobby() {
 
   const [session, setLocalSession] = useState<GameSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [confirmLeaveVisible, setConfirmLeaveVisible] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
@@ -83,11 +85,22 @@ export default function Lobby() {
     // registered (email/password) sessions due to JWT handling in the
     // Supabase realtime RLS evaluation path.
     const poll = setInterval(async () => {
-      const s = await getSessionById(sessionId);
-      if (s && (s.status === 'selecting' || s.status === 'active')) {
-        clearInterval(poll);
-        supabase.removeChannel(channel);
-        advance(s);
+      try {
+        const s = await getSessionById(sessionId);
+        if (!s) return;
+        if (new Date(s.expires_at) < new Date() && s.status !== 'finished' && s.status !== 'abandoned') {
+          clearInterval(poll);
+          supabase.removeChannel(channel);
+          setLoadError(true);
+          return;
+        }
+        if (s.status === 'selecting' || s.status === 'active') {
+          clearInterval(poll);
+          supabase.removeChannel(channel);
+          advance(s);
+        }
+      } catch {
+        // transient error — next poll will retry
       }
     }, 3000);
 
@@ -96,6 +109,13 @@ export default function Lobby() {
       clearInterval(poll);
     };
   }, [sessionId]);
+
+  // Loading timeout — show error if init hangs
+  useEffect(() => {
+    if (!loading) return;
+    const t = setTimeout(() => setLoadError(true), LOADING_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [loading]);
 
   const handleConfirmLeave = async () => {
     if (!sessionId) return;
@@ -108,6 +128,18 @@ export default function Lobby() {
       setLeaving(false);
     }
   };
+
+  if (loadError) {
+    return (
+      <SafeAreaView className="flex-1 bg-background items-center justify-center px-6 gap-4">
+        <Text className="text-navy text-lg font-bold text-center">Session unavailable</Text>
+        <Text className="text-gray-500 text-sm text-center">
+          This lobby is no longer available. Please start or join a new game.
+        </Text>
+        <Button title="Go Home" onPress={() => router.replace('/(tabs)/home')} />
+      </SafeAreaView>
+    );
+  }
 
   if (loading || !session) {
     return (

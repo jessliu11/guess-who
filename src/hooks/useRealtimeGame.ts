@@ -5,7 +5,18 @@ import { useGameStore } from '../store/gameStore';
 import { getSessionById } from '../lib/session';
 import type { GameSession } from '../types/game.types';
 
-export function useRealtimeGame(sessionId: string | null) {
+function isExpired(session: GameSession): boolean {
+  return (
+    new Date(session.expires_at) < new Date() &&
+    session.status !== 'finished' &&
+    session.status !== 'abandoned'
+  );
+}
+
+export function useRealtimeGame(
+  sessionId: string | null,
+  onExpired?: () => void,
+) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const syncFromServer = useGameStore((s) => s.syncFromServer);
 
@@ -32,8 +43,17 @@ export function useRealtimeGame(sessionId: string | null) {
   };
 
   const refetch = async (id: string) => {
-    const session = await getSessionById(id);
-    if (session) syncFromServer(session);
+    try {
+      const session = await getSessionById(id);
+      if (!session) return;
+      if (isExpired(session)) {
+        onExpired?.();
+        return;
+      }
+      syncFromServer(session);
+    } catch {
+      // transient error — next poll will retry
+    }
   };
 
   useEffect(() => {
