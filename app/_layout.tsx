@@ -33,15 +33,27 @@ function AuthGate({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
 
+        // Auth state is known from the cached AsyncStorage session — unblock
+        // navigation and dismiss the splash immediately. Profile and entitlement
+        // load in the background so a slow/unavailable network on cold launch
+        // never leaves the user stuck on a blank screen.
+        setLoading(false);
+        SplashScreen.hideAsync();
+
         if (session?.user) {
           identifyUser(session.user.id).catch(() => {});
 
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select()
-            .eq('id', session.user.id)
-            .single();
-          setProfile(profile ?? null);
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select()
+              .eq('id', session.user.id)
+              .single();
+            setProfile(profile ?? null);
+          } catch {
+            // Profile loads as null; premium gate defaults to free until next
+            // successful fetch.
+          }
 
           refreshEntitlement().catch(() => {
             useSubscriptionStore.getState().setLoading(false);
@@ -51,9 +63,6 @@ function AuthGate({ children }: { children: React.ReactNode }) {
           useSubscriptionStore.getState().setIsPremium(false);
           useSubscriptionStore.getState().setLoading(false);
         }
-
-        setLoading(false);
-        SplashScreen.hideAsync();
       },
     );
 
