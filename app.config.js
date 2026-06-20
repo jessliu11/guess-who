@@ -9,9 +9,7 @@ export default ({ config }) => ({
   userInterfaceStyle: 'light',
   newArchEnabled: true,
   splash: {
-    image: './assets/splash-icon.png',
-    resizeMode: 'contain',
-    backgroundColor: '#0F172A',
+    backgroundColor: '#7C3AED',
   },
   ios: {
     supportsTablet: false,
@@ -56,9 +54,7 @@ export default ({ config }) => ({
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#0F172A',
-        image: './assets/splash-icon.png',
-        imageWidth: 200,
+        backgroundColor: '#7C3AED',
       },
     ],
   ],
