@@ -17,6 +17,7 @@ import { supabase } from '../src/lib/supabase';
 import { useAuthStore } from '../src/store/authStore';
 import { useSubscriptionStore } from '../src/store/subscriptionStore';
 import { configureRevenueCat, identifyUser, refreshEntitlement } from '../src/lib/revenuecat';
+import { LoadingScreen } from '../src/components/LoadingScreen';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,11 +35,11 @@ function AuthGate({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
 
         // Auth state is known from the cached AsyncStorage session — unblock
-        // navigation and dismiss the splash immediately. Profile and entitlement
-        // load in the background so a slow/unavailable network on cold launch
-        // never leaves the user stuck on a blank screen.
+        // navigation. Profile and entitlement load in the background so a
+        // slow/unavailable network on cold launch never leaves the user stuck.
+        // The native splash is already dismissed (see RootLayout); until auth
+        // resolves the gradient LoadingScreen is shown instead of a blank screen.
         setLoading(false);
-        SplashScreen.hideAsync();
 
         if (session?.user) {
           identifyUser(session.user.id).catch(() => {});
@@ -81,6 +82,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     }
   }, [user, isLoading, segments]);
 
+  if (isLoading) return <LoadingScreen />;
+
   return <>{children}</>;
 }
 
@@ -91,6 +94,12 @@ export default function RootLayout() {
     Poppins_600SemiBold,
     Poppins_700Bold,
   });
+
+  // Once fonts are ready we can render the gradient LoadingScreen, so dismiss
+  // the native splash and hand off to it (avoids a blank/navy frame on launch).
+  useEffect(() => {
+    if (fontsLoaded) SplashScreen.hideAsync();
+  }, [fontsLoaded]);
 
   if (!fontsLoaded) return null;
 
