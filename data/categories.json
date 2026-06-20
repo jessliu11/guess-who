@@ -98,5 +98,15 @@
     "packShareCode": "ACTOR",
     "packName": "Actors",
     "requiresPremium": false
+  },
+  {
+    "id": "kpop-groups",
+    "label": "K-Pop Groups",
+    "description": "Iconic K-pop groups from every generation",
+    "emoji": "🎶",
+    "sortOrder": 11,
+    "packShareCode": "KGRP",
+    "packName": "K-Pop Groups",
+    "requiresPremium": false
   }
 ]
