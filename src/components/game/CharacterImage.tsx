@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ImageStyle, StyleProp, ViewStyle } from 'react-native';
+import { View, Text, ImageStyle, StyleProp, ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { getInitials, getColorForName } from '../../lib/avatar';
 
 interface CharacterImageProps {
@@ -32,7 +33,9 @@ export function CharacterImage({
         style={style}
         className={className}
         blurRadius={blurRadius}
-        resizeMode={resizeMode}
+        contentFit={resizeMode}
+        cachePolicy="memory-disk"
+        recyclingKey={imageUrl}
         onError={() => setImgError(true)}
       />
     );

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { TouchableOpacity, View, Text, Image } from 'react-native';
+import { TouchableOpacity, View, Text } from 'react-native';
+import { Image } from 'expo-image';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -88,7 +89,9 @@ export function CharacterCard({
             <Image
               source={{ uri: character.image_url }}
               style={{ width: '100%', height: imgH }}
-              resizeMode="cover"
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={character.id}
               onError={() => setImgError(true)}
             />
           ) : (
@@ -125,7 +128,9 @@ export function CharacterCard({
             <Image
               source={{ uri: character.image_url }}
               style={{ width: '100%', height: imgH }}
-              resizeMode="cover"
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={character.id}
               onError={() => setImgError(true)}
             />
           ) : (
