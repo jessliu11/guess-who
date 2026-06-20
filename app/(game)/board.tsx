@@ -4,11 +4,11 @@ import {
   Text,
   ScrollView,
   Modal,
-  Image,
   ActivityIndicator,
   Alert,
   TouchableOpacity,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -80,6 +80,10 @@ export default function Board() {
           (a, b) => s.character_pool.indexOf(a.id) - s.character_pool.indexOf(b.id),
         );
         setCharacters(chars);
+        // Warm the image cache in parallel — non-blocking so a slow network
+        // never delays setLoading(false) below.
+        const urls = chars.map((c) => c.image_url).filter((u): u is string => !!u);
+        if (urls.length > 0) Image.prefetch(urls, { cachePolicy: 'memory-disk' });
       } catch {
         setInitError(true);
       } finally {
