@@ -1,6 +1,6 @@
 export default ({ config }) => ({
   ...config,
-  name: 'Who, What, Where?',
+  name: '3W',
   slug: 'guess-who-app',
   version: '1.1.0',
   orientation: 'portrait',
