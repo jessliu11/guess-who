@@ -108,5 +108,15 @@
     "packShareCode": "KGRP",
     "packName": "K-Pop Groups",
     "requiresPremium": false
+  },
+  {
+    "id": "fictional-characters",
+    "label": "Fictional Characters",
+    "description": "Beloved characters from movies, TV, books, and beyond",
+    "emoji": "🎭",
+    "sortOrder": 12,
+    "packShareCode": "FICT",
+    "packName": "Fictional Characters",
+    "requiresPremium": false
   }
 ]
