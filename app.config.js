@@ -14,9 +14,11 @@ export default ({ config }) => ({
   ios: {
     supportsTablet: false,
     bundleIdentifier: 'com.whowhatwhere.app',
+    buildNumber: '6',
     infoPlist: {
       NSCameraUsageDescription: 'Used to take character and profile photos.',
       NSPhotoLibraryUsageDescription: 'Used to pick photos for custom characters.',
+      ITSAppUsesNonExemptEncryption: false,
     },
   },
   android: {
