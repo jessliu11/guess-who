@@ -3,6 +3,15 @@ import { View, Text, ImageStyle, StyleProp, ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { getInitials, getColorForName } from '../../lib/avatar';
 
+// Supabase Storage supports imgproxy transforms via query params.
+// Serving a capped resolution dramatically reduces payload size on the wire
+// (a 4 MB original becomes ~30 KB at 400 px) without any visible quality loss
+// at the sizes characters are displayed in the app.
+function supabaseThumb(url: string): string {
+  if (!url.includes('/storage/v1/object/public/')) return url;
+  return `${url}?width=400&height=400&resize=cover&quality=80`;
+}
+
 interface CharacterImageProps {
   name: string;
   imageUrl: string | null | undefined;
@@ -27,15 +36,16 @@ export function CharacterImage({
   useEffect(() => { setImgError(false); }, [imageUrl]);
 
   if (imageUrl && !imgError) {
+    const resolvedUrl = supabaseThumb(imageUrl);
     return (
       <Image
-        source={{ uri: imageUrl }}
+        source={{ uri: resolvedUrl }}
         style={style}
         className={className}
         blurRadius={blurRadius}
         contentFit={resizeMode}
         cachePolicy="memory-disk"
-        recyclingKey={imageUrl}
+        recyclingKey={resolvedUrl}
         onError={() => setImgError(true)}
       />
     );

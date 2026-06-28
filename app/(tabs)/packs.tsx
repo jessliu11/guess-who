@@ -12,7 +12,8 @@ import { Plus, Lock, ChevronRight, ArrowRight, Users } from 'lucide-react-native
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { useAuth } from '../../src/hooks/useAuth';
 import { FREE_CATEGORY_IDS, LOADING_TIMEOUT_MS } from '../../src/constants/config';
-import { getSystemPacksWithPreviews } from '../../src/lib/packs';
+import { Image } from 'expo-image';
+import { getSystemPacksWithPreviews, getCharactersByIds } from '../../src/lib/packs';
 import { getMyCustomCharacters } from '../../src/lib/characters';
 import { CharacterImage } from '../../src/components/game/CharacterImage';
 import type { CharacterPack, Character, PackPreviewCharacter } from '../../src/types/game.types';
@@ -51,14 +52,17 @@ function PackCard({
   pack,
   isLocked,
   onPress,
+  onPressIn,
 }: {
   pack: PackWithPreviews;
   isLocked: boolean;
   onPress: () => void;
+  onPressIn?: () => void;
 }) {
   return (
     <TouchableOpacity
       onPress={onPress}
+      onPressIn={onPressIn}
       activeOpacity={0.85}
       className="rounded-2xl overflow-hidden bg-white border border-[#E5E0D5]"
       style={{ flex: 1 }}
@@ -223,6 +227,13 @@ export default function Packs() {
                 <PackCard
                   pack={pack}
                   isLocked={isLocked}
+                  onPressIn={() => {
+                    if (isLocked) return;
+                    getCharactersByIds(pack.character_ids).then((chars) => {
+                      const urls = chars.map((c) => c.image_url).filter((u): u is string => !!u);
+                      if (urls.length) Image.prefetch(urls, { cachePolicy: 'memory-disk' });
+                    }).catch(() => {});
+                  }}
                   onPress={() => {
                     if (isLocked) { router.push('/paywall'); return; }
                     router.push({ pathname: '/(game)/pack-detail', params: { packId: pack.id } } as any);
