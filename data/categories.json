@@ -118,5 +118,15 @@
     "packShareCode": "FICT",
     "packName": "Fictional Characters",
     "requiresPremium": false
+  },
+  {
+    "id": "everyday-objects",
+    "label": "Everyday Objects",
+    "description": "Household items and everyday essentials",
+    "emoji": "🏠",
+    "sortOrder": 13,
+    "packShareCode": "EOBJ",
+    "packName": "Everyday Objects",
+    "requiresPremium": false
   }
 ]
