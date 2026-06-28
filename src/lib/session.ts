@@ -130,8 +130,6 @@ export async function submitGuess(
 }
 
 export async function abandonSession(sessionId: string): Promise<void> {
-  await supabase
-    .from('game_sessions')
-    .update({ status: 'abandoned' })
-    .eq('id', sessionId);
+  const { error } = await supabase.rpc('abandon_session', { p_session_id: sessionId });
+  if (error) throw error;
 }
