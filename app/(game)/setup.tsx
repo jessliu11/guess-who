@@ -15,7 +15,7 @@ import { Button } from '../../src/components/ui/Button';
 import { CharacterImage } from '../../src/components/game/CharacterImage';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useSubscription } from '../../src/hooks/useSubscription';
-import { FREE_CATEGORY_IDS } from '../../src/constants/config';
+import { FREE_CATEGORY_IDS, LOADING_TIMEOUT_MS } from '../../src/constants/config';
 import { getSystemPacksWithPreviews, getCharactersByIds } from '../../src/lib/packs';
 import { getMyCustomCharacters } from '../../src/lib/characters';
 import { createSession, joinSession } from '../../src/lib/session';
@@ -208,11 +208,21 @@ export default function Setup() {
       return;
     }
     setLoading(true);
+    // Guard against the join request hanging on cold launch due to iOS network
+    // initialisation delay. The global fetch timeout in supabase.ts will abort
+    // the underlying request; this timer ensures the UI unblocks even if the
+    // error doesn't propagate in time.
+    const uiTimeout = setTimeout(() => {
+      setLoading(false);
+      Alert.alert('Connection Timeout', 'Could not reach the server. Please check your connection and try again.');
+    }, LOADING_TIMEOUT_MS);
     try {
       const session = await joinSession(user.id, code);
+      clearTimeout(uiTimeout);
       useGameStore.getState().setMyRole('guest');
       router.push(`/(game)/lobby?sessionId=${session.id}`);
     } catch (e: any) {
+      clearTimeout(uiTimeout);
       Alert.alert('Error', e.message ?? 'Could not find that game.');
     } finally {
       setLoading(false);

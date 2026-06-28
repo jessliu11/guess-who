@@ -11,7 +11,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Plus, Lock, ChevronRight, ArrowRight, Users } from 'lucide-react-native';
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { useAuth } from '../../src/hooks/useAuth';
-import { FREE_CATEGORY_IDS } from '../../src/constants/config';
+import { FREE_CATEGORY_IDS, LOADING_TIMEOUT_MS } from '../../src/constants/config';
 import { getSystemPacksWithPreviews } from '../../src/lib/packs';
 import { getMyCustomCharacters } from '../../src/lib/characters';
 import { CharacterImage } from '../../src/components/game/CharacterImage';
@@ -98,6 +98,10 @@ export default function Packs() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
+    // Defense-in-depth: if the global fetch timeout in supabase.ts doesn't
+    // propagate fast enough, dismiss the spinner here so the user is never
+    // permanently stuck. They can pull-to-refresh or navigate away and back.
+    const uiTimeout = setTimeout(() => setLoading(false), LOADING_TIMEOUT_MS);
     try {
       const [sp, cc] = await Promise.all([
         getSystemPacksWithPreviews(),
@@ -105,7 +109,10 @@ export default function Packs() {
       ]);
       setSystemPacks(sp);
       setCustomCharacters(cc);
+    } catch {
+      // Network error or timeout — show whatever loaded (possibly empty).
     } finally {
+      clearTimeout(uiTimeout);
       setLoading(false);
     }
   };
