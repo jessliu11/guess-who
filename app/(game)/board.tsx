@@ -18,6 +18,7 @@ import { CharacterImage } from '../../src/components/game/CharacterImage';
 import { TurnIndicator } from '../../src/components/game/TurnIndicator';
 import { WinModal } from '../../src/components/game/WinModal';
 import { OpponentLeftModal } from '../../src/components/game/OpponentLeftModal';
+import { WrongGuessModal } from '../../src/components/game/WrongGuessModal';
 import { Button } from '../../src/components/ui/Button';
 import { ConfirmModal } from '../../src/components/ui/ConfirmModal';
 import { useGameStore } from '../../src/store/gameStore';
@@ -54,6 +55,7 @@ export default function Board() {
   const [confirmLeaveVisible, setConfirmLeaveVisible] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [opponentLeftVisible, setOpponentLeftVisible] = useState(false);
+  const [wrongGuessVisible, setWrongGuessVisible] = useState(false);
   const leftByMe = useRef(false);
 
   const handleExpired = () => {
@@ -151,6 +153,9 @@ export default function Board() {
       const updated = await submitGuess(sessionId, myRole, guessSelected.id);
       setSession(updated as unknown as GameSession);
       setGuessModalVisible(false);
+      if ((updated as unknown as GameSession).current_turn !== myRole) {
+        setWrongGuessVisible(true);
+      }
     } catch (e: any) {
       Alert.alert('Error', e.message);
     } finally {
@@ -313,6 +318,13 @@ export default function Board() {
         loading={leaving}
         onConfirm={handleConfirmLeave}
         onCancel={() => setConfirmLeaveVisible(false)}
+      />
+
+      {/* Wrong Guess Modal */}
+      <WrongGuessModal
+        visible={wrongGuessVisible}
+        character={guessSelected}
+        onDismiss={() => setWrongGuessVisible(false)}
       />
 
       {/* Opponent Left Modal */}
