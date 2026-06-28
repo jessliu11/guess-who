@@ -17,6 +17,7 @@ export default ({ config }) => ({
     infoPlist: {
       NSCameraUsageDescription: 'Used to take character and profile photos.',
       NSPhotoLibraryUsageDescription: 'Used to pick photos for custom characters.',
+      ITSAppUsesNonExemptEncryption: false,
     },
   },
   android: {
