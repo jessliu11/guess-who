@@ -16,6 +16,7 @@ import { CharacterImage } from '../../src/components/game/CharacterImage';
 import { useAuth } from '../../src/hooks/useAuth';
 import { useSubscription } from '../../src/hooks/useSubscription';
 import { FREE_CATEGORY_IDS, LOADING_TIMEOUT_MS } from '../../src/constants/config';
+import { Image } from 'expo-image';
 import { getSystemPacksWithPreviews, getCharactersByIds } from '../../src/lib/packs';
 import { getMyCustomCharacters } from '../../src/lib/characters';
 import { createSession, joinSession } from '../../src/lib/session';
@@ -80,12 +81,14 @@ function PackCard({
   pack,
   isLocked,
   onPressBody,
+  onPressIn,
   onPressCircle,
   circleState,
 }: {
   pack: PackWithPreviews;
   isLocked: boolean;
   onPressBody: () => void;
+  onPressIn?: () => void;
   onPressCircle: () => void;
   circleState: 'none' | 'partial' | 'all';
 }) {
@@ -96,6 +99,7 @@ function PackCard({
   return (
     <TouchableOpacity
       onPress={onPressBody}
+      onPressIn={onPressIn}
       activeOpacity={0.85}
       className="rounded-2xl overflow-hidden bg-white border border-[#E5E0D5]"
       style={{ flex: 1 }}
@@ -162,6 +166,13 @@ export default function Setup() {
     const chars = await getCharactersByIds(characterIds);
     setPackCharacters(packId, chars);
     return chars;
+  };
+
+  const prefetchPackImages = (pack: CharacterPack) => {
+    ensurePackCharsLoaded(pack.id, pack.character_ids).then((chars) => {
+      const urls = chars.map((c) => c.image_url).filter((u): u is string => !!u);
+      if (urls.length) Image.prefetch(urls, { cachePolicy: 'memory-disk' });
+    }).catch(() => {});
   };
 
   const handleTogglePack = async (pack: CharacterPack, isLocked: boolean) => {
@@ -329,6 +340,7 @@ export default function Setup() {
                   <PackCard
                     pack={pack}
                     isLocked={isLocked}
+                    onPressIn={() => { if (!isLocked) prefetchPackImages(pack); }}
                     onPressBody={() => {
                       if (isLocked) { router.push('/paywall'); return; }
                       router.push({ pathname: '/(game)/pack-drill', params: { sourceId: pack.id, title: displayPackName(pack.name) } } as any);

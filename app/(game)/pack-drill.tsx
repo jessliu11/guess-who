@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Check, ArrowRight } from 'lucide-react-native';
+import { Image } from 'expo-image';
 import { getCharactersByIds } from '../../src/lib/packs';
 import { useSetupStore } from '../../src/store/setupStore';
 import { CharacterImage } from '../../src/components/game/CharacterImage';
@@ -56,6 +57,12 @@ export default function PackDrill() {
   };
 
   useEffect(() => { initLoad(); }, [sourceId]);
+
+  useEffect(() => {
+    if (!characters.length) return;
+    const urls = characters.map((c) => c.image_url).filter((u): u is string => !!u);
+    if (urls.length) Image.prefetch(urls, { cachePolicy: 'memory-disk' });
+  }, [characters]);
 
   const selectedCount = useSetupStore((s) => s.selectedIds.size);
   const localSelectedCount = characters.filter((c) => selectedIds.has(c.id)).length;

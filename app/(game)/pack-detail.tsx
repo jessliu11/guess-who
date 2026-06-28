@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Info } from 'lucide-react-native';
+import { Image } from 'expo-image';
 import { getPackById, getCharactersByIds } from '../../src/lib/packs';
 import { CharacterImage } from '../../src/components/game/CharacterImage';
 import type { CharacterPack, Character } from '../../src/types/game.types';
@@ -32,6 +33,8 @@ export default function PackDetail() {
       if (p) {
         const chars = await getCharactersByIds(p.character_ids);
         setCharacters(chars);
+        const urls = chars.map((c) => c.image_url).filter((u): u is string => !!u);
+        if (urls.length) Image.prefetch(urls, { cachePolicy: 'memory-disk' });
       }
       setLoading(false);
     })();
